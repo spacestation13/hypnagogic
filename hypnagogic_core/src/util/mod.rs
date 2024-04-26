@@ -5,6 +5,7 @@ pub mod adjacency;
 pub mod color;
 pub mod corners;
 pub mod icon_ops;
+pub mod delays;
 
 #[tracing::instrument]
 pub(crate) fn deep_merge_toml(first: &mut Value, second: Value) {

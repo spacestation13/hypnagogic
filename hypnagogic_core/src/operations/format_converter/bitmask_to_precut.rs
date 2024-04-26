@@ -4,8 +4,10 @@ use serde::{Deserialize, Serialize};
 use tracing::debug;
 
 use crate::config::blocks::cutters::StringMap;
+use crate::util::delays::text_delays;
 use crate::operations::error::{ProcessorError, ProcessorResult};
 use crate::operations::{IconOperationConfig, InputIcon, OperationMode, ProcessorPayload};
+use crate::operations::format_converter::error::{InconsistentDelay, RestrorationError};
 
 #[derive(Clone, PartialEq, Debug, Default, Serialize, Deserialize)]
 pub struct BitmaskSliceReconstruct {
@@ -27,9 +29,7 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
     ) -> ProcessorResult<ProcessorPayload> {
         debug!("Starting bitmask slice reconstruction");
         let InputIcon::Dmi(icon) = input else {
-            return Err(ProcessorError::FormatError(
-                "This operation only accepts dmis".to_string(),
-            ));
+            return Err(ProcessorError::DMINotFound);
         };
 
         // First, pull out icon states from DMI
@@ -66,10 +66,7 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
             .into_iter()
             .reduce(|acc, elem| format!("{acc}, {elem}"))
         {
-            return Err(ProcessorError::DmiError(format!(
-                "The following icon states are named with inconsistent prefixes (with the rest of \
-                 the file) [{troublesome_states}]"
-            )));
+            return Err(ProcessorError::from(RestrorationError::InconsistentPrefixes(troublesome_states)));
         }
         // Now, we remove the "core" frames, and dump them out
         let extract_length = self.extract.len();
@@ -116,14 +113,7 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
 
 
         if let Some(missed_suffixes) = ignored_states {
-            let caught_text = strings_caught
-                .into_iter()
-                .reduce(|acc, entry| format!("{acc}, {entry}"))
-                .unwrap_or_default();
-            return Err(ProcessorError::DmiError(format!(
-                "Restoration would fail to properly parse the following icon states \
-                 [{missed_suffixes}] not parsed like [{caught_text}]"
-            )));
+            return Err(ProcessorError::from(RestrorationError::DroppedStates(missed_suffixes)));
         }
 
         // Alright next we're gonna work out the order of our insertion into the png
@@ -169,24 +159,14 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
             .first()
             .and_then(|first_frame| first_frame.delay.clone());
 
-        let text_delays = |textify: Vec<f32>, suffix: &str| -> String {
-            format!(
-                "[{}]",
-                textify
-                    .into_iter()
-                    .map(|ds| format!("{ds}{suffix}"))
-                    .reduce(|acc, text_ds| format!("{acc}, {text_ds}"))
-                    .unwrap_or_default()
-            )
-        };
+        let mut problem_states: Vec<InconsistentDelay> = vec![];
         for (x, state) in trimmed_frames.into_iter().enumerate() {
             if delays != state.delay {
-                return Err(ProcessorError::DmiError(format!(
-                    "Icon state {}'s delays {} do not match with the rest of the file {}",
-                    state.name,
-                    text_delays(state.delay.unwrap_or_default(), "ds"),
-                    text_delays(delays.unwrap_or_default(), "ds")
-                )));
+                problem_states.push(InconsistentDelay {
+                    state: state.name,
+                    delays: state.delay.unwrap_or_default(),
+                });
+                continue;
             }
             for (y, frame) in state.images.into_iter().enumerate() {
                 debug!("{} {} {}", state.name, x, y);
@@ -196,6 +176,9 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
                         panic!("Failed to copy frame (bad dmi?): {} #{}", state.name, y)
                     });
             }
+        }
+        if problem_states.len() > 0 {
+            return Err(ProcessorError::from(RestrorationError::InconsistentDelays{expected: delays.unwrap_or_default(), problems: problem_states}));
         }
 
         let mut config: Vec<String> = vec![];
@@ -219,7 +202,7 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
         }
         if let Some(actual_delay) = delays {
             config.push("[animation]".to_string());
-            config.push(format!("delays = {}", text_delays(actual_delay, "")));
+            config.push(format!("delays = {}", text_delays(&actual_delay, "")));
             config.push(String::new());
         };
         config.push("[icon_size]".to_string());

@@ -81,9 +81,7 @@ impl IconOperationConfig for BitmaskSlice {
     ) -> ProcessorResult<ProcessorPayload> {
         debug!("Starting bitmask slice icon op");
         let InputIcon::DynamicImage(img) = input else {
-            return Err(ProcessorError::FormatError(
-                "This operation only accepts raw images".to_string(),
-            ));
+            return Err(ProcessorError::ImageNotFound);
         };
         let (corners, prefabs) = self.generate_corners(img)?;
 

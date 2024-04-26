@@ -2,6 +2,8 @@ use std::io;
 use std::path::PathBuf;
 
 use hypnagogic_core::config::error::ConfigError;
+use hypnagogic_core::operations::error::ProcessorError;
+use hypnagogic_core::operations::{InputError, OutputError};
 use thiserror::Error;
 use user_error::UFE;
 
@@ -24,6 +26,12 @@ pub enum Error {
         template_string: String,
         expected_path: PathBuf,
     },
+    #[error("Image Parsing Failed")]
+    InputError(#[from] InputError),
+    #[error("Processing Failed")]
+    ProcessorFailed(#[from] ProcessorError),
+    #[error("Output Failed")]
+    OutputError(#[from] OutputError),
     #[error("No template folder")]
     NoTemplateFolder(PathBuf),
     #[error("Generic IO Error")]
@@ -74,6 +82,15 @@ impl UFE for Error {
                     format!("Expected template folder at {folder:?}"),
                 ])
             }
+            Error::InputError(image_error) => {
+                image_error.reasons()
+            }
+            Error::ProcessorFailed(process_error) => {
+                process_error.reasons()
+            }
+            Error::OutputError(output_error) => {
+                output_error.reasons()
+            }
             Error::IO(err) => {
                 Some(vec![format!(
                     "Operation failed for reason of \"{:?}\"",
@@ -109,6 +126,15 @@ impl UFE for Error {
                      exists"
                         .to_string(),
                 )
+            }
+            Error::InputError(image_error) => {
+                image_error.helptext()
+            }
+            Error::ProcessorFailed(process_error) => {
+                process_error.helptext()
+            }
+            Error::OutputError(output_error) => {
+                output_error.reasons()
             }
             Error::IO(_) => {
                 Some(

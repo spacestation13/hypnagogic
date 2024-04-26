@@ -13,6 +13,7 @@ use image::{DynamicImage, ImageError, ImageFormat};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::debug;
+use user_error::UFE;
 
 use crate::operations::error::ProcessorResult;
 
@@ -22,12 +23,34 @@ pub mod format_converter;
 
 #[derive(Debug, Error)]
 pub enum InputError {
-    #[error("This image format is unsupported:\n{0}")]
+    #[error("Format Error")]
     UnsupportedFormat(String),
-    #[error("Error reading the input as a dynamic image:\n{0}")]
+    #[error("Image Reading Error")]
     DynamicRead(#[from] ImageError),
-    #[error("Error reading the input stream as a dmi image:\n{0}")]
+    #[error("DMI Parsing Error")]
     DmiRead(#[from] DmiError),
+}
+
+impl UFE for InputError {
+    fn summary(&self) -> String {
+        format!("{}", self)
+    }
+
+    fn reasons(&self) -> Option<Vec<String>> {
+        match self {
+            InputError::UnsupportedFormat(format) => Some(vec![format!("The [{format}] image format is unsupported")]),
+            InputError::DynamicRead(error) => Some(vec![format!("{}", error)]),
+            InputError::DmiRead(error) => Some(vec![format!("{}", error)]),
+        }
+    }
+
+    fn helptext(&self) -> Option<String> {
+        match self {
+            InputError::UnsupportedFormat(_) => Some("Are you using a valid image format?".to_string()),
+            InputError::DynamicRead(_) => None,
+            InputError::DmiRead(_) => None,
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -130,6 +153,35 @@ impl NamedIcon {
         path
     }
 }
+
+#[derive(Debug, Error)]
+pub enum OutputError {
+    #[error("Image Writing Error")]
+    DynamicWrite(#[from] ImageError),
+    #[error("DMI Writing Error")]
+    DmiWrite(#[from] DmiError),
+}
+
+impl UFE for OutputError {
+    fn summary(&self) -> String {
+        format!("{}", self)
+    }
+
+    fn reasons(&self) -> Option<Vec<String>> {
+        match self {
+            OutputError::DynamicWrite(error) => Some(vec![format!("{}", error)]),
+            OutputError::DmiWrite(error) => Some(vec![format!("{}", error)]),
+        }
+    }
+
+    fn helptext(&self) -> Option<String> {
+        match self {
+            OutputError::DynamicWrite(_) => None,
+            OutputError::DmiWrite(_) => None,
+        }
+    }
+}
+
 
 /// Represents the possible actual outputs of an icon operation
 #[derive(Clone)]

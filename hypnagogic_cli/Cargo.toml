@@ -21,6 +21,7 @@ tracing-subscriber = "0.3"
 user-error ="1.2"
 walkdir = "2.3"
 hypnagogic-core = { path = "../hypnagogic_core" }
+owo-colors = { version = "4.0.0", features = ["supports-colors"] }
 
 [dev-dependencies]
 tempfile = "3.5"

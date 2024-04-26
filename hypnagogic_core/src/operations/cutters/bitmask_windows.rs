@@ -39,9 +39,7 @@ impl IconOperationConfig for BitmaskWindows {
         mode: OperationMode,
     ) -> ProcessorResult<ProcessorPayload> {
         let InputIcon::DynamicImage(img) = input else {
-            return Err(ProcessorError::FormatError(
-                "This operation only accepts raw images".to_string(),
-            ));
+            return Err(ProcessorError::ImageNotFound);
         };
 
         let (_in_x, in_y) = img.dimensions();

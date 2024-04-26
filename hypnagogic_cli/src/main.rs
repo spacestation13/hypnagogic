@@ -4,7 +4,8 @@ use std::fs;
 use std::fs::{metadata, File};
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
-use std::process::exit;
+use image::ImageError;
+use owo_colors::{OwoColorize, colors::*};
 use std::time::Instant;
 
 use anyhow::{anyhow, Result};
@@ -14,14 +15,7 @@ use hypnagogic_core::config::read_config;
 use hypnagogic_core::config::template_resolver::error::TemplateError;
 use hypnagogic_core::config::template_resolver::file_resolver::FileResolver;
 use hypnagogic_core::operations::{
-    IconOperationConfig,
-    InputIcon,
-    NamedIcon,
-    OperationMode,
-    Output,
-    OutputImage,
-    OutputText,
-    ProcessorPayload,
+    IconOperationConfig, InputIcon, NamedIcon, OperationMode, Output, OutputError, OutputImage, OutputText, ProcessorPayload
 };
 use rayon::prelude::*;
 use tracing::{debug, info, Level};
@@ -121,23 +115,23 @@ fn main() -> Result<()> {
     let num_files = files_to_process.len();
     println!("Found {num_files} files!");
 
-    let result: Result<Vec<()>, Error> = files_to_process
+    let files_failed = files_to_process
         .par_iter()
-        .map(|path| process_icon(flatten, debug, &output, &templates, path))
-        .collect();
+        .filter(|path| {
+            let Err(error) = process_icon(flatten, debug, &output, &templates, path) else {
+                return false
+            };
+            println!("{}", path.display().blue().italic());
+            error.print();
+            true
+    }).count();
+    let files_succeeded = num_files - files_failed;
 
-    if let Err(err) = result {
-        err.into_ufe().print();
-        if !dont_wait {
-            dont_disappear::any_key_to_continue::default();
-            exit(1);
-        }
+    if files_failed > 0 {
+        println!("{}", format!("Failed to process {files_failed} files!").bright_red());
     }
-
-    println!(
-        "Successfully processed {num_files} files! (Took {:.2?})",
-        now.elapsed()
-    );
+    println!("{}", format!("Successfully processed {files_succeeded} files!").bright_green());
+    println!("{}", format!("Took {:.2?}", now.elapsed()).blue());
 
     if !dont_wait {
         dont_disappear::any_key_to_continue::default();
@@ -236,16 +230,14 @@ fn process_icon(
         .unwrap();
     let icon_file = File::open(&input_icon_path)?;
     let mut reader = BufReader::new(icon_file);
-    // todo: prettify this error
-    let input = InputIcon::from_reader(&mut reader, &actual_extension).unwrap();
+    let input = InputIcon::from_reader(&mut reader, &actual_extension)?;
 
     let mode = if debug {
         OperationMode::Debug
     } else {
         OperationMode::Standard
     };
-    // TODO: Operation error handling
-    let out = config.do_operation(&input, mode).unwrap();
+    let out = config.do_operation(&input, mode)?;
 
     if let Some(output) = &output {
         let output_path = Path::new(output);
@@ -268,15 +260,18 @@ fn process_icon(
              report!)",
         );
 
-        // TODO: figure out a better thing to do than just the unwrap
         match output {
             Output::Image(icon) => {
                 match icon {
                     OutputImage::Png(png) => {
-                        png.save(&mut path).unwrap();
+                        if let Err(error) = png.save(&mut path) {
+                            return Err(Error::from(OutputError::from(error)));
+                        };
                     }
                     OutputImage::Dmi(dmi) => {
-                        dmi.save(&mut file).unwrap();
+                        if let Err(error) = dmi.save(&mut file) {
+                            return Err(Error::from(OutputError::from(error)));
+                        };
                     }
                 }
             }
