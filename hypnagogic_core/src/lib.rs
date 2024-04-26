@@ -15,7 +15,7 @@
 // sign conversion is fine
 #![allow(clippy::cast_sign_loss)]
 // error we can't do anything about because of dependancies
-#[allow(clippy::multiple_crate_versions)]
+#![allow(clippy::multiple_crate_versions)]
 
 pub mod config;
 pub mod generation;
