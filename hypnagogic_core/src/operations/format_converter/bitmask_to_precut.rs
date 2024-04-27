@@ -114,7 +114,6 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
                 format! {"{acc}, {elem}"}
             });
 
-
         if let Some(missed_suffixes) = ignored_states {
             let caught_text = strings_caught
                 .into_iter()
