@@ -1,6 +1,7 @@
 // Takes a list of delays and a suffix as input, returns a set of textified
 // delays
-#[must_use] pub fn text_delays(textify: &[f32], suffix: &str) -> String {
+#[must_use]
+pub fn text_delays(textify: &[f32], suffix: &str) -> String {
     format!(
         "[{}]",
         textify
