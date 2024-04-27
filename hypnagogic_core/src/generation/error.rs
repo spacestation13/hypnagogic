@@ -11,21 +11,32 @@ pub enum GenerationError {
 
 impl UFE for GenerationError {
     fn summary(&self) -> String {
-       format!("{}", self)
-   }
+        format!("{}", self)
+    }
 
-   fn reasons(&self) -> Option<Vec<String>> {
-       match self {
-            GenerationError::TextTooLong(text, length, max) => Some(vec![format!("Text ({text}) is tooo long to render ({length} pixels wide), max length for this size is around {max}")]),
-            GenerationError::TooManyLines(text, height, max) => Some(vec![format!("Text ({text}) has too many lines ({height} pixels tall), max height for this size is around {max}")]),
-       }
-   }
+    fn reasons(&self) -> Option<Vec<String>> {
+        match self {
+            GenerationError::TextTooLong(text, length, max) => {
+                Some(vec![format!(
+                    "Text ({text}) is tooo long to render ({length} pixels wide), max length for \
+                     this size is around {max}"
+                )])
+            }
+            GenerationError::TooManyLines(text, height, max) => {
+                Some(vec![format!(
+                    "Text ({text}) has too many lines ({height} pixels tall), max height for this \
+                     size is around {max}"
+                )])
+            }
+        }
+    }
 
-   fn helptext(&self) -> Option<String> {
-       match self {
-            GenerationError::TextTooLong(_, _, _) => Some("Try reducing the length of the text (no duh)".to_string()),
-            GenerationError::TooManyLines(_, _, _) => Some("Consider using LESS newlines".to_string()),
-       }
-   }
+    fn helptext(&self) -> Option<String> {
+        match self {
+            GenerationError::TextTooLong(..) => {
+                Some("Try reducing the length of the text (no duh)".to_string())
+            }
+            GenerationError::TooManyLines(..) => Some("Consider using LESS newlines".to_string()),
+        }
+    }
 }
-

@@ -4,8 +4,8 @@ use toml::Value;
 pub mod adjacency;
 pub mod color;
 pub mod corners;
-pub mod icon_ops;
 pub mod delays;
+pub mod icon_ops;
 
 #[tracing::instrument]
 pub(crate) fn deep_merge_toml(first: &mut Value, second: Value) {

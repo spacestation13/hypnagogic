@@ -82,15 +82,9 @@ impl UFE for Error {
                     format!("Expected template folder at {folder:?}"),
                 ])
             }
-            Error::InputError(image_error) => {
-                image_error.reasons()
-            }
-            Error::ProcessorFailed(process_error) => {
-                process_error.reasons()
-            }
-            Error::OutputError(output_error) => {
-                output_error.reasons()
-            }
+            Error::InputError(image_error) => image_error.reasons(),
+            Error::ProcessorFailed(process_error) => process_error.reasons(),
+            Error::OutputError(output_error) => output_error.reasons(),
             Error::IO(err) => {
                 Some(vec![format!(
                     "Operation failed for reason of \"{:?}\"",
@@ -127,15 +121,9 @@ impl UFE for Error {
                         .to_string(),
                 )
             }
-            Error::InputError(image_error) => {
-                image_error.helptext()
-            }
-            Error::ProcessorFailed(process_error) => {
-                process_error.helptext()
-            }
-            Error::OutputError(output_error) => {
-                output_error.helptext()
-            }
+            Error::InputError(image_error) => image_error.helptext(),
+            Error::ProcessorFailed(process_error) => process_error.helptext(),
+            Error::OutputError(output_error) => output_error.helptext(),
             Error::IO(_) => {
                 Some(
                     "Make sure the directories or files aren't in use, and you have permission to \

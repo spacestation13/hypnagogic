@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 use tracing::debug;
 
 use crate::config::blocks::cutters::StringMap;
-use crate::util::delays::text_delays;
 use crate::operations::error::{ProcessorError, ProcessorResult};
-use crate::operations::{IconOperationConfig, InputIcon, OperationMode, ProcessorPayload};
 use crate::operations::format_converter::error::{InconsistentDelay, RestrorationError};
+use crate::operations::{IconOperationConfig, InputIcon, OperationMode, ProcessorPayload};
+use crate::util::delays::text_delays;
 
 #[derive(Clone, PartialEq, Debug, Default, Serialize, Deserialize)]
 pub struct BitmaskSliceReconstruct {
@@ -66,7 +66,9 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
             .into_iter()
             .reduce(|acc, elem| format!("{acc}, {elem}"))
         {
-            return Err(ProcessorError::from(RestrorationError::InconsistentPrefixes(troublesome_states)));
+            return Err(ProcessorError::from(
+                RestrorationError::InconsistentPrefixes(troublesome_states),
+            ));
         }
         // Now, we remove the "core" frames, and dump them out
         let extract_length = self.extract.len();
@@ -113,7 +115,9 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
 
 
         if let Some(missed_suffixes) = ignored_states {
-            return Err(ProcessorError::from(RestrorationError::DroppedStates(missed_suffixes)));
+            return Err(ProcessorError::from(RestrorationError::DroppedStates(
+                missed_suffixes,
+            )));
         }
 
         // Alright next we're gonna work out the order of our insertion into the png
@@ -178,7 +182,12 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
             }
         }
         if problem_states.len() > 0 {
-            return Err(ProcessorError::from(RestrorationError::InconsistentDelays{expected: delays.unwrap_or_default(), problems: problem_states}));
+            return Err(ProcessorError::from(
+                RestrorationError::InconsistentDelays {
+                    expected: delays.unwrap_or_default(),
+                    problems: problem_states,
+                },
+            ));
         }
 
         let mut config: Vec<String> = vec![];

@@ -4,7 +4,6 @@ use std::fs;
 use std::fs::{metadata, File};
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
-use owo_colors::OwoColorize;
 use std::time::Instant;
 
 use anyhow::{anyhow, Result};
@@ -14,8 +13,17 @@ use hypnagogic_core::config::read_config;
 use hypnagogic_core::config::template_resolver::error::TemplateError;
 use hypnagogic_core::config::template_resolver::file_resolver::FileResolver;
 use hypnagogic_core::operations::{
-    IconOperationConfig, InputIcon, NamedIcon, OperationMode, Output, OutputError, OutputImage, OutputText, ProcessorPayload
+    IconOperationConfig,
+    InputIcon,
+    NamedIcon,
+    OperationMode,
+    Output,
+    OutputError,
+    OutputImage,
+    OutputText,
+    ProcessorPayload,
 };
+use owo_colors::OwoColorize;
 use rayon::prelude::*;
 use tracing::{debug, info, Level};
 use user_error::UFE;
@@ -118,18 +126,25 @@ fn main() -> Result<()> {
         .par_iter()
         .filter(|path| {
             let Err(error) = process_icon(flatten, debug, &output, &templates, path) else {
-                return false
+                return false;
             };
             println!("{}", path.display().blue().italic());
             error.print();
             true
-    }).count();
+        })
+        .count();
     let files_succeeded = num_files - files_failed;
 
     if files_failed > 0 {
-        println!("{}", format!("Failed to process {files_failed} files!").bright_red());
+        println!(
+            "{}",
+            format!("Failed to process {files_failed} files!").bright_red()
+        );
     }
-    println!("{}", format!("Successfully processed {files_succeeded} files!").bright_green());
+    println!(
+        "{}",
+        format!("Successfully processed {files_succeeded} files!").bright_green()
+    );
     println!("{}", format!("Took {:.2?}", now.elapsed()).blue());
 
     if !dont_wait {

@@ -38,7 +38,9 @@ impl UFE for InputError {
 
     fn reasons(&self) -> Option<Vec<String>> {
         match self {
-            InputError::UnsupportedFormat(format) => Some(vec![format!("The [{format}] image format is unsupported")]),
+            InputError::UnsupportedFormat(format) => {
+                Some(vec![format!("The [{format}] image format is unsupported")])
+            }
             InputError::DynamicRead(error) => Some(vec![format!("{}", error)]),
             InputError::DmiRead(error) => Some(vec![format!("{}", error)]),
         }
@@ -46,7 +48,9 @@ impl UFE for InputError {
 
     fn helptext(&self) -> Option<String> {
         match self {
-            InputError::UnsupportedFormat(_) => Some("Are you using a valid image format?".to_string()),
+            InputError::UnsupportedFormat(_) => {
+                Some("Are you using a valid image format?".to_string())
+            }
             InputError::DynamicRead(_) => None,
             InputError::DmiRead(_) => None,
         }
