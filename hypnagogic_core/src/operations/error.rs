@@ -21,7 +21,7 @@ pub type ProcessorResult<T> = Result<T, ProcessorError>;
 
 impl UFE for ProcessorError {
     fn summary(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn reasons(&self) -> Option<Vec<String>> {

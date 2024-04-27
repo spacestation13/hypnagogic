@@ -11,7 +11,7 @@ pub enum GenerationError {
 
 impl UFE for GenerationError {
     fn summary(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn reasons(&self) -> Option<Vec<String>> {

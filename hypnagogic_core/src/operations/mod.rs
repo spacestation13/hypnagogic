@@ -33,7 +33,7 @@ pub enum InputError {
 
 impl UFE for InputError {
     fn summary(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn reasons(&self) -> Option<Vec<String>> {
@@ -51,8 +51,7 @@ impl UFE for InputError {
             InputError::UnsupportedFormat(_) => {
                 Some("Are you using a valid image format?".to_string())
             }
-            InputError::DynamicRead(_) => None,
-            InputError::DmiRead(_) => None,
+            InputError::DynamicRead(_) | InputError::DmiRead(_) => None,
         }
     }
 }
@@ -168,7 +167,7 @@ pub enum OutputError {
 
 impl UFE for OutputError {
     fn summary(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn reasons(&self) -> Option<Vec<String>> {
@@ -180,8 +179,7 @@ impl UFE for OutputError {
 
     fn helptext(&self) -> Option<String> {
         match self {
-            OutputError::DynamicWrite(_) => None,
-            OutputError::DmiWrite(_) => None,
+            OutputError::DynamicWrite(_) | OutputError::DmiWrite(_) => None,
         }
     }
 }

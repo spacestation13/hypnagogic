@@ -180,7 +180,7 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
                     });
             }
         }
-        if problem_states.len() > 0 {
+        if !problem_states.is_empty() {
             return Err(ProcessorError::from(
                 RestrorationError::InconsistentDelays {
                     expected: delays.unwrap_or_default(),

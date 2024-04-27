@@ -27,11 +27,11 @@ pub enum Error {
         expected_path: PathBuf,
     },
     #[error("Image Parsing Failed")]
-    InputError(#[from] InputError),
+    InputParsingFailed(#[from] InputError),
     #[error("Processing Failed")]
     ProcessorFailed(#[from] ProcessorError),
     #[error("Output Failed")]
-    OutputError(#[from] OutputError),
+    OutputWriteFailed(#[from] OutputError),
     #[error("No template folder")]
     NoTemplateFolder(PathBuf),
     #[error("Generic IO Error")]
@@ -82,9 +82,9 @@ impl UFE for Error {
                     format!("Expected template folder at {folder:?}"),
                 ])
             }
-            Error::InputError(image_error) => image_error.reasons(),
+            Error::InputParsingFailed(image_error) => image_error.reasons(),
             Error::ProcessorFailed(process_error) => process_error.reasons(),
-            Error::OutputError(output_error) => output_error.reasons(),
+            Error::OutputWriteFailed(output_error) => output_error.reasons(),
             Error::IO(err) => {
                 Some(vec![format!(
                     "Operation failed for reason of \"{:?}\"",
@@ -121,9 +121,9 @@ impl UFE for Error {
                         .to_string(),
                 )
             }
-            Error::InputError(image_error) => image_error.helptext(),
+            Error::InputParsingFailed(image_error) => image_error.helptext(),
             Error::ProcessorFailed(process_error) => process_error.helptext(),
-            Error::OutputError(output_error) => output_error.helptext(),
+            Error::OutputWriteFailed(output_error) => output_error.helptext(),
             Error::IO(_) => {
                 Some(
                     "Make sure the directories or files aren't in use, and you have permission to \

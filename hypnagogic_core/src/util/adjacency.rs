@@ -218,7 +218,7 @@ mod tests {
 
         let result = adj.set_flags_vec();
 
-        let expected = vec![Adjacency::N, Adjacency::W, Adjacency::S];
+        let expected = [Adjacency::N, Adjacency::W, Adjacency::S];
 
         assert!(expected.iter().all(|item| result.contains(item)));
     }

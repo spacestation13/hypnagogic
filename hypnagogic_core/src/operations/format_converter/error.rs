@@ -24,7 +24,7 @@ pub enum RestrorationError {
 
 impl UFE for RestrorationError {
     fn summary(&self) -> String {
-        format!("{}", self)
+        format!("{self}")
     }
 
     fn reasons(&self) -> Option<Vec<String>> {
@@ -54,7 +54,7 @@ impl UFE for RestrorationError {
                         text_delays(&problem.delays, "ds")
                     ));
                 }
-                return Some(hand_back);
+                Some(hand_back)
             }
         }
     }
