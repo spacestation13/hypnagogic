@@ -4,8 +4,7 @@ use std::fs;
 use std::fs::{metadata, File};
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
-use image::ImageError;
-use owo_colors::{OwoColorize, colors::*};
+use owo_colors::OwoColorize;
 use std::time::Instant;
 
 use anyhow::{anyhow, Result};

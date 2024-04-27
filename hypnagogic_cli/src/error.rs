@@ -134,7 +134,7 @@ impl UFE for Error {
                 process_error.helptext()
             }
             Error::OutputError(output_error) => {
-                output_error.reasons()
+                output_error.helptext()
             }
             Error::IO(_) => {
                 Some(
