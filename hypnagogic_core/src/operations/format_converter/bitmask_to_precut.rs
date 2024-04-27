@@ -113,7 +113,6 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
                 format! {"{acc}, {elem}"}
             });
 
-
         if let Some(missed_suffixes) = ignored_states {
             return Err(ProcessorError::from(RestrorationError::DroppedStates(
                 missed_suffixes,
