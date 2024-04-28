@@ -35,5 +35,6 @@ xcopy ..\templates hypnagogic-full-package\templates\ /E/H
 
 # finally zip up our package, yeah?
 7z a hypnagogic-full-package.zip .\hypnagogic-full-package\*
+tar -czf hypnagogic-full-package.tar.gz .\hypnagogic-full-package\*
 # back out to normal
 cd ..
