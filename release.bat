@@ -20,14 +20,16 @@ cd %name%
 # sets up gitignore so this doesn't pollute my life
 echo * > .gitignore
 # copy over the 2 binaries we just generated
-copy ..\target\x86_64-unknown-linux-musl\release\hypnagogic-cli .
 copy ..\target\x86_64-pc-windows-msvc\release\hypnagogic-cli.exe .
+copy ..\target\x86_64-unknown-linux-musl\release\hypnagogic-cli .
+rename "hypnagogic-cli.exe" "hypnagogic.exe"
+rename "hypnagogic-cli" "hypnagogic"
 
 # make our to be zipped subfolder
 mkdir hypnagogic-full-package
 # insert a copy of the binaries and other shit we care about
-copy hypnagogic-cli.exe hypnagogic-full-package\
-copy hypnagogic-cli hypnagogic-full-package\
+copy hypnagogic.exe hypnagogic-full-package\
+copy hypnagogic hypnagogic-full-package\
 copy ..\LICENSE.md hypnagogic-full-package\
 copy ..\README.md hypnagogic-full-package\
 xcopy ..\examples hypnagogic-full-package\examples\ /E/H
