@@ -7,11 +7,11 @@
 # also this way when I forget how to do this I'll have a nice tool for myself
 
 rustup target add x86_64-pc-windows-msvc
-wsl.exe rustup target add x86_64-unknown-linux-musl
+wsl --shell-type login rustup target add x86_64-unknown-linux-musl
 # Creates a release based off our current branch. Takes the release version as an arg
 # First, let's build our binaries. Needs to be done statically so people w/o the right c runtime can vibe
 cargo build --release --target x86_64-pc-windows-msvc
-wsl.exe cargo build --release --target x86_64-unknown-linux-musl
+wsl --shell-type login cargo build --release --target x86_64-unknown-linux-musl
 
 # Next, we'll create a folder to hold our shit
 set name="Hypnagogic Release v%1"
