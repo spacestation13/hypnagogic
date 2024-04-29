@@ -119,12 +119,12 @@ mod test {
             third = 1
             "#;
 
-            let second_string = r#"
+            let second_string = r"
             first = 2
             second = 2
             third = 2
             fourth = 2
-            "#;
+            ";
 
             let third_string = r#"
             template = "fourth"
@@ -136,7 +136,7 @@ mod test {
             inner_2 = 3
             "#;
 
-            let fourth_string = r#"
+            let fourth_string = r"
             first = 4
             second = 4
             third = 4
@@ -144,7 +144,7 @@ mod test {
             inner_1 = 4
             inner_2 = 4
             inner_3 = 4
-            "#;
+            ";
 
             Ok(toml::from_str(match input {
                 "first" => first_string,
@@ -173,12 +173,12 @@ mod test {
 
             let result = resolve_templates(input, TestResolver).unwrap();
 
-            let expected_string = r#"
+            let expected_string = r"
             first = 10
             second = 10
             third = 1
             fourth = 2
-            "#;
+            ";
             let expected: Value = toml::from_str(expected_string).unwrap();
             assert_eq!(result, expected);
         }
@@ -197,7 +197,7 @@ mod test {
 
             let result = resolve_templates(input, TestResolver).unwrap();
 
-            let expected_string = r#"
+            let expected_string = r"
             first = 10
             second = 10
             third = 3
@@ -205,7 +205,7 @@ mod test {
             inner_1 = 10
             inner_2 = 3
             inner_3 = 4
-            "#;
+            ";
             let expected_value: Value = toml::from_str(expected_string).unwrap();
             assert_eq!(result, expected_value);
         }
