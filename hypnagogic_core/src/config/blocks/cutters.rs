@@ -231,6 +231,7 @@ impl<'de> Deserialize<'de> for PrefabOverlays {
 #[derive(Clone, PartialEq, Debug, Default, Serialize, Deserialize)]
 pub struct Animation {
     pub delays: Vec<f32>,
+    pub rewind: Option<bool>,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug)]

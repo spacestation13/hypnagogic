@@ -161,6 +161,7 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
         let delays: Option<Vec<f32>> = trimmed_frames
             .first()
             .and_then(|first_frame| first_frame.delay.clone());
+        let rewind = trimmed_frames.first().and_then(|first_frame| Some(first_frame.rewind)).unwrap_or(false);
 
         let mut problem_states: Vec<InconsistentDelay> = vec![];
         for (x, state) in trimmed_frames.into_iter().enumerate() {
@@ -211,6 +212,9 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
         if let Some(actual_delay) = delays {
             config.push("[animation]".to_string());
             config.push(format!("delays = {}", text_delays(&actual_delay, "")));
+            if rewind == true {
+                config.push(format!("rewind = {rewind}"));
+            }
             config.push(String::new());
         };
         config.push("[icon_size]".to_string());
