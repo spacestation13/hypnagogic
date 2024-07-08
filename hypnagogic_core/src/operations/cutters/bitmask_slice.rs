@@ -113,7 +113,11 @@ impl IconOperationConfig for BitmaskSlice {
             .animation
             .clone()
             .map(|x| repeat_for(&x.delays, num_frames as usize));
-        let rewind = self.animation.as_ref().and_then(|animation| animation.rewind).unwrap_or(false);
+        let rewind = self
+            .animation
+            .as_ref()
+            .and_then(|animation| animation.rewind)
+            .unwrap_or(false);
 
         let states_to_gen = (0..possible_states)
             .map(|x| Adjacency::from_bits(x as u8).unwrap())
@@ -139,7 +143,7 @@ impl IconOperationConfig for BitmaskSlice {
                 frames: num_frames,
                 images: icon_state_frames,
                 delay: delay.clone(),
-                rewind: rewind,
+                rewind,
                 ..Default::default()
             }));
         }

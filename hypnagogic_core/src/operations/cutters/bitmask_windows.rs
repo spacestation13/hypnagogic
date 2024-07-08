@@ -92,7 +92,11 @@ impl IconOperationConfig for BitmaskWindows {
             .animation
             .clone()
             .map(|x| repeat_for(&x.delays, num_frames as usize));
-        let rewind = self.animation.as_ref().and_then(|animation| animation.rewind).unwrap_or(false);
+        let rewind = self
+            .animation
+            .as_ref()
+            .and_then(|animation| animation.rewind)
+            .unwrap_or(false);
 
         let mut states = vec![];
 
@@ -133,7 +137,7 @@ impl IconOperationConfig for BitmaskWindows {
                     frames: num_frames,
                     images: upper_frames,
                     delay: delay.clone(),
-                    rewind: rewind,
+                    rewind,
                     ..Default::default()
                 }));
                 states.push(dedupe_frames(IconState {
@@ -142,7 +146,7 @@ impl IconOperationConfig for BitmaskWindows {
                     frames: num_frames,
                     images: lower_frames,
                     delay: delay.clone(),
-                    rewind: rewind,
+                    rewind,
                     ..Default::default()
                 }));
             };

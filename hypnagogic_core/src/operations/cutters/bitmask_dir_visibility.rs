@@ -66,7 +66,12 @@ impl IconOperationConfig for BitmaskDirectionalVis {
             .animation
             .clone()
             .map(|x| repeat_for(&x.delays, num_frames as usize));
-        let rewind = self.bitmask_slice_config.animation.as_ref().and_then(|animation| animation.rewind).unwrap_or(false);
+        let rewind = self
+            .bitmask_slice_config
+            .animation
+            .as_ref()
+            .and_then(|animation| animation.rewind)
+            .unwrap_or(false);
 
         let mut icon_states = vec![];
 
@@ -112,7 +117,7 @@ impl IconOperationConfig for BitmaskDirectionalVis {
                     frames: num_frames,
                     images: icon_state_frames,
                     delay: delay.clone(),
-                    rewind: rewind,
+                    rewind,
                     ..Default::default()
                 }));
             }
@@ -155,7 +160,7 @@ impl IconOperationConfig for BitmaskDirectionalVis {
                 frames: num_frames,
                 images: icon_state_frames,
                 delay: delay.clone(),
-                rewind: rewind,
+                rewind,
 
                 ..Default::default()
             }));
