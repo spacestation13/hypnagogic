@@ -16,6 +16,10 @@
 #![allow(clippy::cast_sign_loss)]
 // error we can't do anything about because of dependancies
 #![allow(clippy::multiple_crate_versions)]
+// map makes less sense in some contexts 
+#![allow(clippy::bind_instead_of_map)]
+// throws in cases where `` obfuscates what's going on (code links)
+#![allow(clippy::doc_markdown)]
 
 pub mod config;
 pub mod generation;

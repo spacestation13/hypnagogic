@@ -79,7 +79,7 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
             .clone()
             .into_iter()
             .filter_map(|(mut state, suffix)| {
-                state.name = suffix.clone();
+                state.name.clone_from(&suffix);
                 if bespoke.get(suffix.as_str()).is_some() {
                     bespoke_found.push(suffix);
                     Some(state)
@@ -215,7 +215,7 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
         if let Some(actual_delay) = delays {
             config.push("[animation]".to_string());
             config.push(format!("delays = {}", text_delays(&actual_delay, "")));
-            if rewind == true {
+            if rewind {
                 config.push(format!("rewind = {rewind}"));
             }
             config.push(String::new());
