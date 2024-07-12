@@ -111,6 +111,10 @@ y = 16
 # If you do not provide a delay for each frame (ie, two delays for 4 frames,) the delay values
 # will cycle until the list is full. ie, 10,20 for 5 frames becomes 10,20,10,20,10 and so on.
 delays = [10, 20]
+# Rewind is a boolean that maps directly to byond, if it's true animations will play,
+# then animate "backwards" to the start.
+# Defaults to false
+rewind = false
 
 # Settings for generating a unique map icon for each icon_state
 # This entire section is optional
