@@ -8,6 +8,7 @@ use tracing::{debug, trace};
 
 use crate::config::template_resolver::error::{TemplateError, TemplateResult};
 use crate::config::template_resolver::TemplateResolver;
+use crate::config::DEFAULT_TEMPLATE_LOCATION;
 
 /// Loads templates from a folder on the filesystem.
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -28,7 +29,8 @@ impl FileResolver {
 
 impl Default for FileResolver {
     fn default() -> Self {
-        FileResolver::new(Path::new("templates")).expect("templates folder does not exist")
+        FileResolver::new(Path::new(DEFAULT_TEMPLATE_LOCATION))
+            .unwrap_or_else(|_| panic!("{DEFAULT_TEMPLATE_LOCATION} folder does not exist"))
     }
 }
 
