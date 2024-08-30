@@ -5,6 +5,8 @@ use toml::Value;
 
 #[derive(Debug, Error)]
 pub enum TemplateError {
+    #[error("Template dir not found while creating FileResolver {0}")]
+    NoTemplateDir(PathBuf),
     #[error("Failed to find template: `{0}`, expected `{1}`")]
     FailedToFindTemplate(String, PathBuf),
     #[error("Generic toml parse error while resolving template: {0}")]

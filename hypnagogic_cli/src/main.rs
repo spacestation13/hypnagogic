@@ -53,8 +53,9 @@ struct Args {
     /// Location of the templates folder
     #[arg(short, long, default_value_t = String::from("templates"))]
     templates: String,
-    /// Input directory/file
-    input: String,
+    /// List of space separated output directory/file(s)
+    #[arg(num_args = 1.., value_delimiter = ' ', required = true)]
+    input: Vec<String>,
 }
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -96,27 +97,62 @@ fn main() -> Result<()> {
         tracing::subscriber::set_global_default(subscriber)?;
     };
 
-    if !Path::new(&input).exists() {
-        return Err(anyhow!("Input path does not exist!"));
+    let mut invalid_paths: Vec<String> = vec![];
+    let mut inaccessible_paths: Vec<std::io::Error> = vec![];
+    let files_to_process: Vec<PathBuf> = input
+        .into_iter()
+        .filter_map(|potential_path| {
+            if !Path::new(&potential_path).exists() {
+                invalid_paths.push(potential_path);
+                return None;
+            }
+
+            let metadata = match metadata(&potential_path) {
+                Ok(data) => data,
+                Err(error) => {
+                    inaccessible_paths.push(error);
+                    return None;
+                }
+            };
+            if metadata.is_file() {
+                return Some(vec![Path::new(&potential_path).to_path_buf()]);
+            }
+            Some(
+                WalkDir::new(potential_path)
+                    .into_iter()
+                    .filter_map(Result::ok)
+                    .filter(|e| e.file_type().is_file())
+                    .filter(|e| {
+                        if let Some(extension) = e.path().extension() {
+                            extension == "toml"
+                        } else {
+                            false
+                        }
+                    })
+                    .map(|e| e.into_path())
+                    .collect(),
+            )
+        })
+        .flatten()
+        .collect();
+
+    if !invalid_paths.is_empty() || !inaccessible_paths.is_empty() {
+        let mut error_text = if !invalid_paths.is_empty() {
+            format!(
+                "The input path(s) [{}] do not exist",
+                invalid_paths.join(", ")
+            )
+        } else {
+            "".to_string()
+        };
+        if !inaccessible_paths.is_empty() {
+            error_text = inaccessible_paths
+                .iter()
+                .fold(error_text, |acc, elem| format!("{}\n{}", acc, elem));
+        }
+        return Err(anyhow!("{}", error_text));
     }
 
-    let files_to_process: Vec<PathBuf> = if metadata(&input)?.is_file() {
-        vec![Path::new(&input).to_path_buf()]
-    } else {
-        WalkDir::new(&input)
-            .into_iter()
-            .filter_map(Result::ok)
-            .filter(|e| e.file_type().is_file())
-            .filter(|e| {
-                if let Some(extension) = e.path().extension() {
-                    extension == "toml"
-                } else {
-                    false
-                }
-            })
-            .map(|e| e.into_path())
-            .collect()
-    };
     debug!(files = ?files_to_process, "Files to process");
 
     let num_files = files_to_process.len();
@@ -183,6 +219,7 @@ fn process_icon(
         match err {
             ConfigError::Template(template_err) => {
                 match template_err {
+                    TemplateError::NoTemplateDir(dir_path) => Error::NoTemplateFolder(dir_path),
                     TemplateError::FailedToFindTemplate(template_string, expected_path) => {
                         Error::TemplateNotFound {
                             source_config,
