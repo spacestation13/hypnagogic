@@ -20,8 +20,8 @@ impl FileResolver {
     /// # Errors
     /// Returns an error if `path` does not exist.
     pub fn new(path: &Path) -> Result<Self, TemplateError> {
-        let pathbuf =
-            fs::canonicalize(path).map_err(|_e| TemplateError::NoTemplateDir(path.to_path_buf()))?;
+        let pathbuf = fs::canonicalize(path)
+            .map_err(|_e| TemplateError::NoTemplateDir(path.to_path_buf()))?;
         Ok(FileResolver { path: pathbuf })
     }
 }

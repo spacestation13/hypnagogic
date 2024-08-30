@@ -219,9 +219,7 @@ fn process_icon(
         match err {
             ConfigError::Template(template_err) => {
                 match template_err {
-                    TemplateError::NoTemplateDir(dir_path) => {
-                        Error::NoTemplateFolder(dir_path)
-                    }
+                    TemplateError::NoTemplateDir(dir_path) => Error::NoTemplateFolder(dir_path),
                     TemplateError::FailedToFindTemplate(template_string, expected_path) => {
                         Error::TemplateNotFound {
                             source_config,
