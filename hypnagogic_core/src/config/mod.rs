@@ -15,7 +15,7 @@ pub mod blocks;
 pub mod error;
 pub mod template_resolver;
 
-pub const LATEST_VERSION: &str = "1";
+pub const DEFAULT_TEMPLATE_LOCATION: &str = "templates";
 
 #[tracing::instrument(skip(resolver, input))]
 pub fn read_config<R: Read + Seek>(

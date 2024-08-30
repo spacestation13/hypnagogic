@@ -51,7 +51,7 @@ struct Args {
     #[arg(short, long)]
     output: Option<String>,
     /// Location of the templates folder
-    #[arg(short, long, default_value_t = String::from("templates"))]
+    #[arg(short, long, default_value_t = String::from(hypnagogic_core::config::DEFAULT_TEMPLATE_LOCATION))]
     templates: String,
     /// List of space separated output directory/file(s)
     #[arg(num_args = 1.., value_delimiter = ' ', required = true)]
