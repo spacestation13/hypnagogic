@@ -1,6 +1,5 @@
 use core::default::Default;
 use core::result::Result::{Err, Ok};
-use std::fmt::Formatter;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -16,28 +15,13 @@ pub struct FileResolver {
     path: PathBuf,
 }
 
-#[derive(Debug)]
-pub struct NoTemplateDirError(PathBuf);
-
-impl std::fmt::Display for NoTemplateDirError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Template dir not found while creating FileResolver: {:?}",
-            self.0
-        )
-    }
-}
-
-impl std::error::Error for NoTemplateDirError {}
-
 impl FileResolver {
     /// Creates a new `FileResolver` with the given path
     /// # Errors
     /// Returns an error if `path` does not exist.
-    pub fn new(path: &Path) -> Result<Self, NoTemplateDirError> {
+    pub fn new(path: &Path) -> Result<Self, TemplateError> {
         let pathbuf =
-            fs::canonicalize(path).map_err(|_e| NoTemplateDirError(path.to_path_buf()))?;
+            fs::canonicalize(path).map_err(|_e| TemplateError::NoTemplateDir(path.to_path_buf()))?;
         Ok(FileResolver { path: pathbuf })
     }
 }
