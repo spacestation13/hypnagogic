@@ -226,7 +226,7 @@ mod test {
 
             let test_toml = "
                 operation = \"BitmaskSlice\"
-                produce_dirs = false
+                produce_rotated_dirs = false
                 smooth_diagonally = false
 
                 [icon_size]

@@ -51,7 +51,7 @@ pub struct BitmaskSlice {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub output_name: Option<String>,
-    pub produce_dirs: bool,
+    pub produce_rotated_dirs: bool,
     pub smooth_diagonally: bool,
     pub icon_size: IconSize,
     pub output_icon_pos: OutputIconPosition,
@@ -94,7 +94,7 @@ impl IconOperationConfig for BitmaskSlice {
             SIZE_OF_CARDINALS
         };
 
-        let icon_directions = if self.produce_dirs {
+        let icon_directions = if self.produce_rotated_dirs {
             Adjacency::dmi_cardinals().to_vec()
         } else {
             vec![Adjacency::S]

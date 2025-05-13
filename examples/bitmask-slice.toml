@@ -30,7 +30,7 @@ mode = "BitmaskSlice"
 
 # Produces "rotated" icons as dmi directions on each icon_state
 # Each "rotated" version will be the correct corresponding
-produce_dirs = false
+produce_rotated_dirs = false
 # Whether diagonal adjacency should be checked, primarily used with flat top icons
 smooth_diagonally = false
 

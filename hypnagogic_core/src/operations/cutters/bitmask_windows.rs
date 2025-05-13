@@ -62,7 +62,7 @@ impl IconOperationConfig for BitmaskWindows {
                 y: self.icon_size.y / 2,
             },
             animation: self.animation.clone(),
-            produce_dirs: false,
+            produce_rotated_dirs: false,
             prefabs: None,
             prefab_overlays: None,
             smooth_diagonally: true,
