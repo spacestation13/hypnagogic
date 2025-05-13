@@ -1,1 +1,2 @@
 template = "bitmask/slice-tallwalls-directionalvis"
+direction_strategy = "CardinalsRotated"
