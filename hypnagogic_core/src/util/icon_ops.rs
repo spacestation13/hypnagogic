@@ -1,6 +1,6 @@
 use dmi::icon::IconState;
 use image::{DynamicImage, GenericImageView};
-
+use tracing::debug;
 use crate::util::color::Color;
 
 // Removes duplicate frames from the icon state's animation, if it has any
@@ -8,48 +8,49 @@ use crate::util::color::Color;
 pub fn dedupe_frames(icon_state: IconState) -> IconState {
     struct AccumulatedAnim {
         delays: Vec<f32>,
-        frames: Vec<DynamicImage>,
-        working_index: u32,
+        frames: Vec<Vec<DynamicImage>>,
+        current_frame: usize,
     }
 
-    if icon_state.frames <= 1 {
+    if icon_state.frames as usize <= 1 {
         return icon_state;
     }
     let Some(current_delays) = &icon_state.delay else {
         return icon_state;
     };
 
-    // As we walk through the frames in this icon state, we're going to keep track
-    // of the ones that Are duplicates, and "dedupe" them by simply adding extra
+
+    // We're just gonna wrap these up into chunks so we can work on them in groups
+    let delay_bucket = icon_state.images.chunks_exact(icon_state.dirs as usize)
+        .map(|full_direction| full_direction.to_vec());
+    // As we walk through the frames (chunks of pixels) in this icon state, we're going to keep track
+    // of the ones that are duplicates, and "dedupe" them by simply adding extra
     // frame delay and removing the extra frame
-    let deduped_anim = current_delays.iter().zip(icon_state.images).fold(
-        AccumulatedAnim {
+    let deduped_anim = current_delays.into_iter().zip(delay_bucket).fold(
+    AccumulatedAnim {
             delays: Vec::new(),
+            // [[1, 1, 1, 1], [2, 2, 2, 2], ...]
             frames: Vec::new(),
-            working_index: 0,
+            current_frame: 0,
         },
-        |mut acc, elem| {
-            let (&current_delay, current_frame) = elem;
-            if acc.frames.is_empty() {
-                acc.delays.push(current_delay);
-                acc.frames.push(current_frame);
+        |mut acc, (current_delay, images)| {
+            if acc.current_frame != 0 && acc.frames[acc.current_frame - 1].iter().eq(images.iter())  {
+                acc.delays[acc.current_frame - 1] += current_delay;
                 return acc;
             }
-            let current_index = acc.working_index;
-            if acc.frames[current_index as usize] == current_frame {
-                acc.delays[current_index as usize] += current_delay;
-            } else {
-                acc.delays.push(current_delay);
-                acc.frames.push(current_frame);
-                acc.working_index += 1;
-            }
+            acc.delays.push(*current_delay);
+            let count = images.len();
+            acc.frames.push(images);
+            acc.current_frame += 1;
             acc
         },
     );
+    // now we just need to flatten out our chunks and we're good to go
+    let fixed_frames = deduped_anim.frames.into_iter().flatten().collect::<Vec<DynamicImage>>();
 
     IconState {
-        frames: deduped_anim.working_index + 1,
-        images: deduped_anim.frames,
+        frames: deduped_anim.current_frame as u32,
+        images: fixed_frames,
         delay: Some(deduped_anim.delays),
         ..icon_state
     }

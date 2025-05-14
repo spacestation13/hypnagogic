@@ -1,7 +1,9 @@
 use dmi::icon::{Icon, IconState};
 use enum_iterator::all;
+use fixed_map::Map;
 use image::{imageops, DynamicImage, GenericImageView};
 use serde::{Deserialize, Serialize};
+use tracing::trace;
 
 use crate::config::blocks::cutters::SlicePoint;
 use crate::generation::icon::generate_map_icon;
@@ -21,6 +23,7 @@ use crate::operations::{
 };
 use crate::util::adjacency::Adjacency;
 use crate::util::corners::{Corner, Side};
+use crate::util::directions::{Direction, DirectionStrategy};
 use crate::util::icon_ops::dedupe_frames;
 use crate::util::repeat_for;
 
@@ -54,7 +57,9 @@ impl IconOperationConfig for BitmaskDirectionalVis {
             SIZE_OF_CARDINALS
         };
 
-        let assembled = self.bitmask_slice_config.generate_icons(
+        let output_directions = self.bitmask_slice_config.direction_strategy.output_vec();
+        let dir_count = output_directions.len() as u8;
+        let assembled_map = self.bitmask_slice_config.generate_icons(
             &corners,
             &prefabs,
             num_frames,
@@ -75,10 +80,11 @@ impl IconOperationConfig for BitmaskDirectionalVis {
 
         let mut icon_states = vec![];
 
-        for (adjacency, images) in &assembled {
-            if !adjacency.has_no_orphaned_corner() {
-                continue;
-            }
+        let states_to_gen = (0..possible_states)
+            .map(|x| Adjacency::from_bits(x as u8).unwrap())
+            .filter(Adjacency::ref_has_no_orphaned_corner);
+
+        for adjacency in states_to_gen {
             for side in Side::dmi_cardinals() {
                 let mut icon_state_frames = vec![];
                 let slice_info = self.get_side_cuts(side);
@@ -98,22 +104,32 @@ impl IconOperationConfig for BitmaskDirectionalVis {
                         self.bitmask_slice_config.icon_size.y,
                     )
                 };
+                
+                for direction in &output_directions {
+                    let images = match self.bitmask_slice_config.direction_strategy {
+                        DirectionStrategy::CardinalsRotated => {
+                            let rotated_sig: Adjacency = adjacency.rotate_to(*direction);
+                            trace!(sig = ?direction, rotated_sig = ?rotated_sig, "Rotated");
+                            assembled_map.get(Direction::STANDARD).unwrap().get(&adjacency).unwrap()
+                        }
+                        _ => assembled_map.get(*direction).unwrap().get(&adjacency).unwrap(),
+                    };
+                    for image in images {
+                        let mut cut_img = DynamicImage::new_rgba8(
+                            self.bitmask_slice_config.icon_size.x,
+                            self.bitmask_slice_config.icon_size.y,
+                        );
 
-                for image in images {
-                    let mut cut_img = DynamicImage::new_rgba8(
-                        self.bitmask_slice_config.icon_size.x,
-                        self.bitmask_slice_config.icon_size.y,
-                    );
+                        let crop = image.crop_imm(x, y, width, height);
 
-                    let crop = image.crop_imm(x, y, width, height);
-
-                    imageops::overlay(&mut cut_img, &crop, x as i64, y as i64);
-                    icon_state_frames.push(cut_img);
+                        imageops::overlay(&mut cut_img, &crop, x as i64, y as i64);
+                        icon_state_frames.push(cut_img);
+                    }
                 }
                 icon_states.push(dedupe_frames(IconState {
                     name: format!("{}-{}", adjacency.bits(), side.byond_dir()),
 
-                    dirs: 1,
+                    dirs: dir_count,
                     frames: num_frames,
                     images: icon_state_frames,
                     delay: delay.clone(),
@@ -123,7 +139,21 @@ impl IconOperationConfig for BitmaskDirectionalVis {
             }
         }
 
-        let convex_images = assembled.get(&Adjacency::CARDINALS).unwrap();
+        let convex_images = self.bitmask_slice_config
+            .direction_strategy
+            .output_vec()
+            .iter().fold(Map::new(), |mut acc, direction| {
+                let input_dir = match self.bitmask_slice_config.direction_strategy {
+                    // Rotation doesn't DO anything to cardinals, we just need to ensure we only PULL using the standard dir here
+                    DirectionStrategy::CardinalsRotated => {
+                        Direction::STANDARD
+                    }
+                    _ => *direction,
+                };
+                let just_cardinals = assembled_map.get(input_dir).unwrap().get(&Adjacency::CARDINALS).unwrap();
+                acc.insert(*direction, just_cardinals);
+                acc
+            });
         for corner in all::<Corner>() {
             let mut icon_state_frames = vec![];
 
@@ -141,22 +171,25 @@ impl IconOperationConfig for BitmaskDirectionalVis {
                 let end = self.bitmask_slice_config.icon_size.y;
                 (slice_point, end - slice_point)
             };
+            
+            for direction in &output_directions {
+                let images = *convex_images.get(*direction).unwrap();
+                for image in images {
+                    let mut cut_img = DynamicImage::new_rgba8(
+                        self.bitmask_slice_config.icon_size.x,
+                        self.bitmask_slice_config.icon_size.y,
+                    );
 
-            for image in convex_images {
-                let mut cut_img = DynamicImage::new_rgba8(
-                    self.bitmask_slice_config.icon_size.x,
-                    self.bitmask_slice_config.icon_size.y,
-                );
+                    let crop_img = image.crop_imm(x, y, width, height);
 
-                let crop_img = image.crop_imm(x, y, width, height);
-
-                imageops::overlay(&mut cut_img, &crop_img, x as i64, y as i64);
-                icon_state_frames.push(cut_img);
+                    imageops::overlay(&mut cut_img, &crop_img, x as i64, y as i64);
+                    icon_state_frames.push(cut_img);
+                }
             }
 
             icon_states.push(dedupe_frames(IconState {
                 name: format!("innercorner-{}", corner.byond_dir()),
-                dirs: 1,
+                dirs: dir_count,
                 frames: num_frames,
                 images: icon_state_frames,
                 delay: delay.clone(),

@@ -18,6 +18,7 @@ use crate::operations::error::{ProcessorError, ProcessorResult};
 use crate::operations::{IconOperationConfig, InputIcon, OperationMode, ProcessorPayload};
 use crate::util::adjacency::Adjacency;
 use crate::util::corners::CornerType;
+use crate::util::directions::{Direction, DirectionStrategy};
 use crate::util::icon_ops::dedupe_frames;
 use crate::util::repeat_for;
 
@@ -62,6 +63,7 @@ impl IconOperationConfig for BitmaskWindows {
                 y: self.icon_size.y / 2,
             },
             animation: self.animation.clone(),
+            direction_strategy: DirectionStrategy::Standard,
             produce_rotated_dirs: false,
             prefabs: None,
             prefab_overlays: None,
@@ -70,8 +72,10 @@ impl IconOperationConfig for BitmaskWindows {
         };
 
         let (corners, prefabs) = bitmask_config.generate_corners(img)?;
-        let assembled =
+        let assembled_map =
             bitmask_config.generate_icons(&corners, &prefabs, num_frames, SIZE_OF_DIAGONALS);
+        // We know we will only care about normal directions here, so we can just bypass anything else
+        let assembled = assembled_map.get(Direction::STANDARD).unwrap();
 
         let mut alt_config = bitmask_config;
 
@@ -85,8 +89,9 @@ impl IconOperationConfig for BitmaskWindows {
         alt_config.positions = Positions(positions);
 
         let (corners_alt, prefabs_alt) = alt_config.generate_corners(img)?;
-        let assembled_alt =
+        let assembled_map_alt =
             alt_config.generate_icons(&corners_alt, &prefabs_alt, num_frames, SIZE_OF_DIAGONALS);
+        let assembled_alt = assembled_map_alt.get(Direction::STANDARD).unwrap();
 
         let delay = self
             .animation

@@ -1,6 +1,4 @@
 template = "bitmask/slice-32x32"
 
-direction_strategy = "All"
-
 [cut_pos]
 y = 5
