@@ -45,7 +45,6 @@ pub struct BitmaskSlice {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub output_name: Option<String>,
-    pub produce_rotated_dirs: bool,
     pub smooth_diagonally: bool,
     #[serde(default)]
     pub direction_strategy: DirectionStrategy,

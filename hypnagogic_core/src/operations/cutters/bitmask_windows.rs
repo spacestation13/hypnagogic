@@ -64,7 +64,6 @@ impl IconOperationConfig for BitmaskWindows {
             },
             animation: self.animation.clone(),
             direction_strategy: DirectionStrategy::Standard,
-            produce_rotated_dirs: false,
             prefabs: None,
             prefab_overlays: None,
             smooth_diagonally: true,

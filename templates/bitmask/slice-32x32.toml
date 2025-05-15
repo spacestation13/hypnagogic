@@ -1,7 +1,6 @@
 file_prefix = "GENERATED-"
 mode = "BitmaskSlice"
 
-produce_rotated_dirs = false
 smooth_diagonally = false
 
 [icon_size]
