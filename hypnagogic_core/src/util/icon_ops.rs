@@ -1,5 +1,6 @@
 use dmi::icon::IconState;
 use image::{DynamicImage, GenericImageView};
+
 use crate::util::color::Color;
 
 // Removes duplicate frames from the icon state's animation, if it has any
@@ -20,20 +21,23 @@ pub fn dedupe_frames(icon_state: IconState) -> IconState {
 
 
     // We're just gonna wrap these up into chunks so we can work on them in groups
-    let delay_bucket = icon_state.images.chunks_exact(icon_state.dirs as usize)
-        .map(|full_direction| full_direction.to_vec());
-    // As we walk through the frames (chunks of pixels) in this icon state, we're going to keep track
-    // of the ones that are duplicates, and "dedupe" them by simply adding extra
-    // frame delay and removing the extra frame
-    let deduped_anim = current_delays.into_iter().zip(delay_bucket).fold(
-    AccumulatedAnim {
+    let delay_bucket = icon_state
+        .images
+        .chunks_exact(icon_state.dirs as usize)
+        .map(<[image::DynamicImage]>::to_vec);
+    // As we walk through the frames (chunks of pixels) in this icon state, we're
+    // going to keep track of the ones that are duplicates, and "dedupe" them by
+    // simply adding extra frame delay and removing the extra frame
+    let deduped_anim = current_delays.iter().zip(delay_bucket).fold(
+        AccumulatedAnim {
             delays: Vec::new(),
             // [[1, 1, 1, 1], [2, 2, 2, 2], ...]
             frames: Vec::new(),
             current_frame: 0,
         },
         |mut acc, (current_delay, images)| {
-            if acc.current_frame != 0 && acc.frames[acc.current_frame - 1].iter().eq(images.iter())  {
+            if acc.current_frame != 0 && acc.frames[acc.current_frame - 1].iter().eq(images.iter())
+            {
                 acc.delays[acc.current_frame - 1] += current_delay;
                 return acc;
             }
@@ -44,7 +48,11 @@ pub fn dedupe_frames(icon_state: IconState) -> IconState {
         },
     );
     // now we just need to flatten out our chunks and we're good to go
-    let fixed_frames = deduped_anim.frames.into_iter().flatten().collect::<Vec<DynamicImage>>();
+    let fixed_frames = deduped_anim
+        .frames
+        .into_iter()
+        .flatten()
+        .collect::<Vec<DynamicImage>>();
 
     IconState {
         frames: deduped_anim.current_frame as u32,

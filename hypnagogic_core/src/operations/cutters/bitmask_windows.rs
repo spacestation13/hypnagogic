@@ -73,7 +73,8 @@ impl IconOperationConfig for BitmaskWindows {
         let (corners, prefabs) = bitmask_config.generate_corners(img)?;
         let assembled_map =
             bitmask_config.generate_icons(&corners, &prefabs, num_frames, SIZE_OF_DIAGONALS);
-        // We know we will only care about normal directions here, so we can just bypass anything else
+        // We know we will only care about normal directions here, so we can just bypass
+        // anything else
         let assembled = assembled_map.get(Direction::STANDARD).unwrap();
 
         let mut alt_config = bitmask_config;
@@ -154,8 +155,8 @@ impl IconOperationConfig for BitmaskWindows {
                     ..Default::default()
                 }));
             };
-            states_from_assembled("", &assembled);
-            states_from_assembled("alt-", &assembled_alt);
+            states_from_assembled("", assembled);
+            states_from_assembled("alt-", assembled_alt);
         }
 
         let icon = Icon {

@@ -104,15 +104,25 @@ impl IconOperationConfig for BitmaskDirectionalVis {
                         self.bitmask_slice_config.icon_size.y,
                     )
                 };
-                
+
                 for direction in &output_directions {
                     let images = match self.bitmask_slice_config.direction_strategy {
                         DirectionStrategy::CardinalsRotated => {
                             let rotated_sig: Adjacency = adjacency.rotate_to(*direction);
                             trace!(sig = ?direction, rotated_sig = ?rotated_sig, "Rotated");
-                            assembled_map.get(Direction::STANDARD).unwrap().get(&adjacency).unwrap()
+                            assembled_map
+                                .get(Direction::STANDARD)
+                                .unwrap()
+                                .get(&adjacency)
+                                .unwrap()
                         }
-                        _ => assembled_map.get(*direction).unwrap().get(&adjacency).unwrap(),
+                        _ => {
+                            assembled_map
+                                .get(*direction)
+                                .unwrap()
+                                .get(&adjacency)
+                                .unwrap()
+                        }
                     };
                     for image in images {
                         let mut cut_img = DynamicImage::new_rgba8(
@@ -139,18 +149,23 @@ impl IconOperationConfig for BitmaskDirectionalVis {
             }
         }
 
-        let convex_images = self.bitmask_slice_config
+        let convex_images = self
+            .bitmask_slice_config
             .direction_strategy
             .output_vec()
-            .iter().fold(Map::new(), |mut acc, direction| {
+            .iter()
+            .fold(Map::new(), |mut acc, direction| {
                 let input_dir = match self.bitmask_slice_config.direction_strategy {
-                    // Rotation doesn't DO anything to cardinals, we just need to ensure we only PULL using the standard dir here
-                    DirectionStrategy::CardinalsRotated => {
-                        Direction::STANDARD
-                    }
+                    // Rotation doesn't DO anything to cardinals, we just need to ensure we only
+                    // PULL using the standard dir here
+                    DirectionStrategy::CardinalsRotated => Direction::STANDARD,
                     _ => *direction,
                 };
-                let just_cardinals = assembled_map.get(input_dir).unwrap().get(&Adjacency::CARDINALS).unwrap();
+                let just_cardinals = assembled_map
+                    .get(input_dir)
+                    .unwrap()
+                    .get(&Adjacency::CARDINALS)
+                    .unwrap();
                 acc.insert(*direction, just_cardinals);
                 acc
             });
@@ -171,7 +186,7 @@ impl IconOperationConfig for BitmaskDirectionalVis {
                 let end = self.bitmask_slice_config.icon_size.y;
                 (slice_point, end - slice_point)
             };
-            
+
             for direction in &output_directions {
                 let images = *convex_images.get(*direction).unwrap();
                 for image in images {

@@ -54,15 +54,11 @@ impl UFE for RestrorationError {
             }
             RestrorationError::InconsistentDirs { expected, problems } => {
                 let mut hand_back: Vec<String> = vec![];
-                hand_back.push(format!(
-                    "The default directions are {}",
-                    expected
-                ));
+                hand_back.push(format!("The default directions are {expected}"));
                 for problem in problems {
                     hand_back.push(format!(
                         "Icon state {}'s dirs {} do not match",
-                        problem.state,
-                        problem.dirs
+                        problem.state, problem.dirs
                     ));
                 }
                 Some(hand_back)
@@ -100,14 +96,8 @@ impl UFE for RestrorationError {
             RestrorationError::InconsistentDirs {
                 expected: _,
                 problems: _,
-            } => {
-                Some(
-                    "Did someone make these by hand? You may need to just go through and set them \
-                     to be consistent"
-                        .to_string(),
-                )
             }
-            RestrorationError::InconsistentDelays {
+            | RestrorationError::InconsistentDelays {
                 expected: _,
                 problems: _,
             } => {

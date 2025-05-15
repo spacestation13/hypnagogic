@@ -1,9 +1,8 @@
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 
-use crate::util::corners::{Corner, CornerType, Side};
-
 use super::directions::Direction;
+use crate::util::corners::{Corner, CornerType, Side};
 
 bitflags! {
     #[allow(clippy::unsafe_derive_deserialize)]

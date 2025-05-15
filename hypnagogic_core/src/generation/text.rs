@@ -1,5 +1,4 @@
 use image::{DynamicImage, GenericImage};
-use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -13,8 +12,8 @@ const VALID_CHARS: [char; 95] = [
 ];
 
 const CHARACTER_RAW_BYTES: &[u8; 371] = include_bytes!("characters.png");
-static CHARACTER_IMAGE: Lazy<DynamicImage> =
-    Lazy::new(|| image::load_from_memory(CHARACTER_RAW_BYTES).unwrap());
+static CHARACTER_IMAGE: std::sync::LazyLock<DynamicImage> =
+    std::sync::LazyLock::new(|| image::load_from_memory(CHARACTER_RAW_BYTES).unwrap());
 
 const CHARACTER_WIDTH: u32 = 3;
 const CHARACTER_HEIGHT: u32 = 5;

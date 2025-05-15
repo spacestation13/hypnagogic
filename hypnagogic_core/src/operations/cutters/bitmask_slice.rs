@@ -8,7 +8,14 @@ use serde::{Deserialize, Serialize};
 use tracing::{debug, trace};
 
 use crate::config::blocks::cutters::{
-    Animation, CutPosition, IconSize, OutputIconPosition, OutputIconSize, Positions, PrefabOverlays, Prefabs
+    Animation,
+    CutPosition,
+    IconSize,
+    OutputIconPosition,
+    OutputIconSize,
+    Positions,
+    PrefabOverlays,
+    Prefabs,
 };
 use crate::config::blocks::generators::MapIcon;
 use crate::generation::icon::generate_map_icon;
@@ -22,8 +29,8 @@ use crate::operations::{
     ProcessorPayload,
 };
 use crate::util::adjacency::Adjacency;
-use crate::util::directions::{Direction, DirectionStrategy};
 use crate::util::corners::{Corner, CornerType, Side};
+use crate::util::directions::{Direction, DirectionStrategy};
 use crate::util::icon_ops::dedupe_frames;
 use crate::util::repeat_for;
 
@@ -80,36 +87,51 @@ impl IconOperationConfig for BitmaskSlice {
         };
         let (in_x, in_y) = img.dimensions();
         let num_frames = in_y / self.icon_size.y;
-        
+
         // I want to shitcheck our image against how large we KNOW it has to be
-        let position_count = self.positions.count() as i32;
-        let direction_count = self.direction_strategy.input_vec().len() as i32;
+        let position_count = self.positions.count() as u32;
+        let direction_count = self.direction_strategy.input_vec().len() as u32;
         let prefab_count = if let Some(prefab) = &self.prefabs {
-            prefab.0.values().count() as i32
+            prefab.0.values().count() as u32
         } else {
             0
         };
-        let expected_width = direction_count * (position_count + prefab_count) * self.icon_size.x as i32;
-        let actual_width = in_x as i32;
+        let expected_width = direction_count * (position_count + prefab_count) * self.icon_size.x;
+        let actual_width = in_x;
         if expected_width != actual_width {
-            // If we're 1 slot off, then it's either prefabs or an extra position 
-            if (expected_width - actual_width).abs() == direction_count * self.icon_size.x as i32 {
-                let expected_inputs = expected_width / self.icon_size.x as i32;
-                let reality_inputs = actual_width / self.icon_size.x as i32;
-                return Err(ProcessorError::ImageWidthOffByOne(expected_width, actual_width, expected_inputs, reality_inputs));
+            // If we're 1 slot off, then it's either prefabs or an extra position
+            if expected_width.abs_diff(actual_width) == direction_count * self.icon_size.x {
+                let expected_inputs = expected_width / self.icon_size.x;
+                let reality_inputs = actual_width / self.icon_size.x;
+                return Err(ProcessorError::ImageWidthOffByOne(
+                    expected_width,
+                    actual_width,
+                    expected_inputs,
+                    reality_inputs,
+                ));
             }
-            // Otherwise, if we're a multiple of the direction count off then the source is pretty obvious
+            // Otherwise, if we're a multiple of the direction count off then the source is
+            // pretty obvious
             let direction_width = (expected_width / direction_count) as f32;
-            if (actual_width as f32 / direction_width).fract() == 0 as f32 {
-                let actual_direction = actual_width / ((position_count + prefab_count) * self.icon_size.x as i32);
-                return Err(ProcessorError::ImageWidthOffByDirection(expected_width, actual_width, direction_count, actual_direction));
+            if (actual_width as f32 / direction_width).fract().abs() < 0.001 {
+                let actual_direction =
+                    actual_width / ((position_count + prefab_count) * self.icon_size.x);
+                return Err(ProcessorError::ImageWidthOffByDirection(
+                    expected_width,
+                    actual_width,
+                    direction_count,
+                    actual_direction,
+                ));
             }
             // If not, it's off by a small value and we can't deduce the cause
-            return Err(ProcessorError::ImproperImageWidth(expected_width, actual_width));
+            return Err(ProcessorError::ImproperImageWidth(
+                expected_width,
+                actual_width,
+            ));
         }
-        
+
         let (corners, prefabs) = self.generate_corners(img)?;
-        
+
         let possible_states = if self.smooth_diagonally {
             SIZE_OF_DIAGONALS
         } else {
@@ -150,11 +172,17 @@ impl IconOperationConfig for BitmaskSlice {
                         trace!(sig = ?direction, rotated_sig = ?rotated_sig, "Rotated");
                         assembled_map.get(Direction::STANDARD).unwrap()[&rotated_sig].clone()
                     }
-                    _ => assembled_map.get(*direction).unwrap()[&adjacency].clone()
-                };          
-                next_frame.into_iter().enumerate().for_each(|(index, image)| animated_blocks[index].push(image));      
+                    _ => assembled_map.get(*direction).unwrap()[&adjacency].clone(),
+                };
+                next_frame
+                    .into_iter()
+                    .enumerate()
+                    .for_each(|(index, image)| animated_blocks[index].push(image));
             }
-            let icon_state_frames = animated_blocks.into_iter().flatten().collect::<Vec<DynamicImage>>();
+            let icon_state_frames = animated_blocks
+                .into_iter()
+                .flatten()
+                .collect::<Vec<DynamicImage>>();
 
             let signature = adjacency.bits();
 
@@ -211,7 +239,7 @@ impl IconOperationConfig for BitmaskSlice {
 }
 
 type CornerPayload = Map<Direction, Map<CornerType, Map<Corner, Vec<DynamicImage>>>>;
-type PrefabPayload =  Map<Direction, HashMap<Adjacency, Vec<DynamicImage>>>;
+type PrefabPayload = Map<Direction, HashMap<Adjacency, Vec<DynamicImage>>>;
 
 // possible icon set is the powerset of the possible directions
 // the size of a powerset is always 2^n where n is number of discrete elements
@@ -299,7 +327,14 @@ impl BitmaskSlice {
             for corner_type in &corner_types[..] {
                 let position = self.positions.get(*corner_type).unwrap();
 
-                let corners = self.build_corner(img, position, position_count, dir_index, num_frames, prefab_count);
+                let corners = self.build_corner(
+                    img,
+                    position,
+                    position_count,
+                    dir_index,
+                    num_frames,
+                    prefab_count,
+                );
 
                 corner_map.insert(*corner_type, corners);
             }
@@ -314,7 +349,8 @@ impl BitmaskSlice {
                 for (adjacency_bits, position) in &prefabs_config.0 {
                     let mut frame_vector = vec![];
                     for frame in 0..num_frames {
-                        let x = (dir_index * position + (prefab_count * (dir_index - 1))) * self.icon_size.x;
+                        let x = (dir_index * position + (prefab_count * (dir_index - 1)))
+                            * self.icon_size.x;
                         let y = frame * self.icon_size.y;
                         let img = img.crop_imm(x, y, self.icon_size.x, self.icon_size.y);
 
@@ -351,8 +387,10 @@ impl BitmaskSlice {
                 let mut icon_state_images = vec![];
                 for frame in 0..num_frames {
                     if prefab_map.contains_key(&adjacency) {
-                        let mut frame_image =
-                            DynamicImage::new_rgba8(self.output_icon_size.x, self.output_icon_size.y);
+                        let mut frame_image = DynamicImage::new_rgba8(
+                            self.output_icon_size.x,
+                            self.output_icon_size.y,
+                        );
                         imageops::replace(
                             &mut frame_image,
                             prefab_map
@@ -366,8 +404,10 @@ impl BitmaskSlice {
 
                         icon_state_images.push(frame_image);
                     } else {
-                        let mut frame_image =
-                            DynamicImage::new_rgba8(self.output_icon_size.x, self.output_icon_size.y);
+                        let mut frame_image = DynamicImage::new_rgba8(
+                            self.output_icon_size.x,
+                            self.output_icon_size.y,
+                        );
 
                         for corner in all::<Corner>() {
                             let corner_type = adjacency.get_corner_type(corner);
@@ -408,8 +448,10 @@ impl BitmaskSlice {
         let mut out = vec![];
 
         let directions: Vec<Direction> = self.direction_strategy.input_vec();
-        let mut corners_image =
-            DynamicImage::new_rgba8(directions.len() as u32 * corners.len() as u32 * self.icon_size.x, self.icon_size.y);
+        let mut corners_image = DynamicImage::new_rgba8(
+            directions.len() as u32 * corners.len() as u32 * self.icon_size.x,
+            self.icon_size.y,
+        );
 
         let prefab_count = if let Some(prefab) = &self.prefabs {
             prefab.count() as u32
@@ -417,7 +459,7 @@ impl BitmaskSlice {
             0
         };
         let position_count = self.positions.count() as u32;
-        
+
         let direction_positions = self.direction_strategy.input_positions();
         for direction in directions {
             let corner_map = corners.get(direction).unwrap();
@@ -429,7 +471,10 @@ impl BitmaskSlice {
                     // output each corner as it's own file
                     out.push(NamedIcon::new(
                         "DEBUGOUT/CORNERS/",
-                        &format!("CORNER-{dir_index}{direction:?}-{input_index}-{corner_type:?}-{corner:?}"),
+                        &format!(
+                            "CORNER-{dir_index}{direction:?}-{input_index}-{corner_type:?\
+                             }-{corner:?}"
+                        ),
                         OutputImage::Png(vec.first().unwrap().clone()),
                     ));
                     // Reassemble the input image from corners (minus prefabs and frames)
