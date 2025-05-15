@@ -41,8 +41,8 @@ impl UFE for InputError {
             InputError::UnsupportedFormat(format) => {
                 Some(vec![format!("The [{format}] image format is unsupported")])
             }
-            InputError::DynamicRead(error) => Some(vec![format!("{}", error)]),
-            InputError::DmiRead(error) => Some(vec![format!("{}", error)]),
+            InputError::DynamicRead(error) => Some(vec![format!("{error}")]),
+            InputError::DmiRead(error) => Some(vec![format!("{error}")]),
         }
     }
 

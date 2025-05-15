@@ -7,6 +7,12 @@ pub enum ProcessorError {
     ImageNotFound,
     #[error("DMI Error")]
     DMINotFound,
+    #[error("Image Width Off By One Error")]
+    ImageWidthOffByOne(u32, u32, u32, u32),
+    #[error("Image Width Direction Error")]
+    ImageWidthOffByDirection(u32, u32, u32, u32),
+    #[error("Image Width Error")]
+    ImproperImageWidth(u32, u32),
     #[error("Image Processing Error")]
     ImageError(#[from] image::error::ImageError),
     #[error("Restoration Error")]
@@ -32,6 +38,33 @@ impl UFE for ProcessorError {
             ProcessorError::DMINotFound => {
                 Some(vec!["This operation only accepts DMIs".to_string()])
             }
+            ProcessorError::ImageWidthOffByOne(
+                expected,
+                reality,
+                expected_input,
+                reality_input,
+            ) => {
+                Some(vec![format!(
+                    "Expected a width of {expected}px, recieved a width of {reality}px. Expected \
+                     {expected_input} inputs per direction, recieved {reality_input} "
+                )])
+            }
+            ProcessorError::ImageWidthOffByDirection(
+                expected,
+                reality,
+                expected_dir_count,
+                dir_count,
+            ) => {
+                Some(vec![format!(
+                    "Expected a width of {expected}px, recieved a width of {reality}px. Expected \
+                     enough width for {expected_dir_count} directions, found {dir_count}"
+                )])
+            }
+            ProcessorError::ImproperImageWidth(expected, reality) => {
+                Some(vec![format!(
+                    "Expected a width of {expected}px, recieved a width of {reality}px"
+                )])
+            }
             ProcessorError::ImageError(error) => Some(vec![format!("{}", error)]),
             ProcessorError::RestorationFailed(error) => error.reasons(),
             ProcessorError::GenerationFailed(error) => error.reasons(),
@@ -52,6 +85,26 @@ impl UFE for ProcessorError {
                     "Check to make sure you're using a dmi and not like a png or something"
                         .to_string(),
                 )
+            }
+            ProcessorError::ImageWidthOffByOne(..) => {
+                Some(
+                    "Have you miscounted the amount of inputs you need? Remember it's 4 for \
+                     cardinals, 5 for diagonals, and 1 extra for each prefab."
+                        .to_string(),
+                )
+            }
+            ProcessorError::ImageWidthOffByDirection(_, _, expected_dir_count, dir_count) => {
+                if expected_dir_count > dir_count {
+                    Some(
+                        "Have you forgotten to add a set of inputs for some of your dirs?"
+                            .to_string(),
+                    )
+                } else {
+                    Some("Are you using the wrong direction strategy?".to_string())
+                }
+            }
+            ProcessorError::ImproperImageWidth(..) => {
+                Some("Have you made the image slightly the wrong width?".to_string())
             }
             ProcessorError::ImageError(_) => None,
             ProcessorError::RestorationFailed(error) => error.helptext(),

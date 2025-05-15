@@ -1,6 +1,7 @@
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 
+use super::directions::Direction;
 use crate::util::corners::{Corner, CornerType, Side};
 
 bitflags! {
@@ -144,10 +145,10 @@ impl Adjacency {
     }
 
     #[must_use]
-    pub fn rotate_dir(self, direction: Self) -> Self {
+    pub fn rotate_dir(self, direction: Direction) -> Self {
         match direction {
             // 180 degree rotation
-            Adjacency::N => {
+            Direction::N => {
                 match self {
                     Adjacency::N => Adjacency::S,
                     Adjacency::S => Adjacency::N,
@@ -161,9 +162,9 @@ impl Adjacency {
                 }
             }
             // No rotation needed!
-            Adjacency::S => self,
+            Direction::S => self,
             // Counter-clockwise 90 degrees
-            Adjacency::E => {
+            Direction::E => {
                 match self {
                     Adjacency::N => Adjacency::W,
                     Adjacency::S => Adjacency::E,
@@ -177,7 +178,7 @@ impl Adjacency {
                 }
             }
             // Clockwise 90 degrees
-            Adjacency::W => {
+            Direction::W => {
                 match self {
                     Adjacency::N => Adjacency::E,
                     Adjacency::S => Adjacency::W,
@@ -199,7 +200,7 @@ impl Adjacency {
     }
 
     #[must_use]
-    pub fn rotate_to(self, direction: Self) -> Self {
+    pub fn rotate_to(self, direction: Direction) -> Self {
         self.set_flags_vec()
             .into_iter()
             .map(|x| x.rotate_dir(direction))

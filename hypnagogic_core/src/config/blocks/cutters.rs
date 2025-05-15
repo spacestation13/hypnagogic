@@ -55,6 +55,11 @@ impl Positions {
     pub fn get(&self, key: CornerType) -> Option<u32> {
         self.0.get(key).copied()
     }
+
+    #[must_use]
+    pub fn count(&self) -> usize {
+        self.0.keys().count()
+    }
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -152,6 +157,13 @@ impl<'de> Deserialize<'de> for StringMap {
 
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct Prefabs(pub BTreeMap<u8, u32>);
+
+impl Prefabs {
+    #[must_use]
+    pub fn count(&self) -> usize {
+        self.0.keys().count()
+    }
+}
 
 #[derive(Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(transparent)]

@@ -5,6 +5,7 @@ pub mod adjacency;
 pub mod color;
 pub mod corners;
 pub mod delays;
+pub mod directions;
 pub mod icon_ops;
 
 #[tracing::instrument]

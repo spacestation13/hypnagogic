@@ -1,6 +1,5 @@
 mode = "BitmaskDirectionalVis"
 
-produce_dirs = false
 smooth_diagonally = true
 
 [icon_size]

@@ -28,9 +28,17 @@ template = "example-template"
 # If any fields are confusing, see visual_ex-bitmask for visual references of some values!
 mode = "BitmaskSlice"
 
-# Produces "rotated" icons as dmi directions on each icon_state
-# Each "rotated" version will be the correct corresponding
-produce_dirs = false
+# Dictates what sort of directions this dmi will have.
+# There are currently 4 possible values:
+# Standard (Default, used if none is specified) -> only 1 direction per frame
+# Cardinals -> 4 directions per frame, arranged as duplicates of the full input set out to the right 
+#   ... in order SOUTH, NORTH, EAST, WEST
+# All -> 8 directions per frame, arranged in the same pattern as cardinals
+#   ... in order SOUTH, NORTH, EAST, WEST, SOUTHEAST, SOUTHWEST, NORTHEAST, NORTHWEST
+# CardinalsRotated -> 1 direction per frame, will be expanded in the dmi to be Cardinals, with each
+#   ... direction being that base junction, rotated in whatever way. Exists mostly so client.dir supporting states
+#   ... can be created. Creates a lot of duplicate blocks otherwise.
+directional_strategy = "Standard"
 # Whether diagonal adjacency should be checked, primarily used with flat top icons
 smooth_diagonally = false
 

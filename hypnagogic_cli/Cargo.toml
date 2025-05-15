@@ -10,9 +10,9 @@ license = "AGPL"
 [dependencies]
 anyhow = "1.0"
 clap = { version = "4.0", features = ["suggestions", "deprecated", "derive", "wrap_help"] }
-dmi = "0.3.1"
+dmi = "0.4.0"
 dont_disappear = "3.0"
-image = { version = "0.24", default-features = false, features = ["png", "gif"] }
+image = { version = "0.25.6", default-features = false, features = ["png", "gif"] }
 rayon = "1.5"
 serde = "1.0"
 thiserror = "1.0"

@@ -1,0 +1,14 @@
+template = "bitmask/slice-32x32"
+
+file_prefix = "GENERATED-"
+
+output_name = "reinf_glass"
+
+smooth_diagonally = true
+
+[positions]
+convex = 0
+concave = 3
+horizontal = 2
+vertical = 1
+flat = 4
