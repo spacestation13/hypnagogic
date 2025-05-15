@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use fixed_map::{Key, Map};
 use serde::{Deserialize, Serialize};
 
@@ -45,7 +47,28 @@ pub enum DirectionStrategy {
     All,
 }
 
+impl Display for DirectionStrategy {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DirectionStrategy::Standard => write!(f, "Standard"),
+            DirectionStrategy::Cardinals => write!(f, "Cardinals"),
+            DirectionStrategy::CardinalsRotated => write!(f, "CardinalsRotated"),
+            DirectionStrategy::All => write!(f, "All"),
+        }
+    }
+}
+
 impl DirectionStrategy {
+
+    #[must_use]
+    pub const fn count_to_strategy(count: u8) -> Option<DirectionStrategy> {
+        match count {
+            1 => Some(DirectionStrategy::Standard),
+            4 => Some(DirectionStrategy::Cardinals),
+            8 => Some(DirectionStrategy::All),
+            _ => None
+        }
+    }
 
     #[must_use]
     pub fn input_vec(&self) -> Vec<Direction> {

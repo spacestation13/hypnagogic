@@ -1,6 +1,5 @@
 use dmi::icon::IconState;
 use image::{DynamicImage, GenericImageView};
-use tracing::debug;
 use crate::util::color::Color;
 
 // Removes duplicate frames from the icon state's animation, if it has any
@@ -39,7 +38,6 @@ pub fn dedupe_frames(icon_state: IconState) -> IconState {
                 return acc;
             }
             acc.delays.push(*current_delay);
-            let count = images.len();
             acc.frames.push(images);
             acc.current_frame += 1;
             acc

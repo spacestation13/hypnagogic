@@ -4,6 +4,12 @@ use user_error::UFE;
 use crate::util::delays::text_delays;
 
 #[derive(Debug)]
+pub struct InconsistentDirs {
+    pub state: String,
+    pub dirs: u8,
+}
+
+#[derive(Debug)]
 pub struct InconsistentDelay {
     pub state: String,
     pub delays: Vec<f32>,
@@ -15,6 +21,11 @@ pub enum RestrorationError {
     InconsistentPrefixes(String),
     #[error("Dropped States")]
     DroppedStates(String),
+    #[error("Inconsistent Directions")]
+    InconsistentDirs {
+        expected: u8,
+        problems: Vec<InconsistentDirs>,
+    },
     #[error("Inconsistent Delays")]
     InconsistentDelays {
         expected: Vec<f32>,
@@ -40,6 +51,21 @@ impl UFE for RestrorationError {
                     "Restoration would fail to properly capture the following icon states: \
                      [{states}]"
                 )])
+            }
+            RestrorationError::InconsistentDirs { expected, problems } => {
+                let mut hand_back: Vec<String> = vec![];
+                hand_back.push(format!(
+                    "The default directions are {}",
+                    expected
+                ));
+                for problem in problems {
+                    hand_back.push(format!(
+                        "Icon state {}'s dirs {} do not match",
+                        problem.state,
+                        problem.dirs
+                    ));
+                }
+                Some(hand_back)
             }
             RestrorationError::InconsistentDelays { expected, problems } => {
                 let mut hand_back: Vec<String> = vec![];
@@ -68,6 +94,16 @@ impl UFE for RestrorationError {
                 Some(
                     "You likely have a set of basically \"additional\" uncut icon states. \
                      Consider moving them to their own dmi"
+                        .to_string(),
+                )
+            }
+            RestrorationError::InconsistentDirs {
+                expected: _,
+                problems: _,
+            } => {
+                Some(
+                    "Did someone make these by hand? You may need to just go through and set them \
+                     to be consistent"
                         .to_string(),
                 )
             }
