@@ -29,7 +29,7 @@ use crate::operations::{
     ProcessorPayload,
 };
 use crate::util::adjacency::Adjacency;
-use crate::util::corners::{Corner, CornerType, Side};
+use crate::util::corners::{Corner, CornerSet, CornerType, Side};
 use crate::util::directions::{Direction, DirectionStrategy};
 use crate::util::icon_ops::dedupe_frames;
 use crate::util::repeat_for;
@@ -52,7 +52,7 @@ pub struct BitmaskSlice {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub output_name: Option<String>,
-    pub smooth_diagonally: bool,
+    pub output_type : CornerSet,
     #[serde(default)]
     pub direction_strategy: DirectionStrategy,
     pub icon_size: IconSize,
@@ -131,15 +131,11 @@ impl IconOperationConfig for BitmaskSlice {
         }
 
         let (corners, prefabs) = self.generate_corners(img)?;
-
-        let possible_states = if self.smooth_diagonally {
-            SIZE_OF_DIAGONALS
-        } else {
-            SIZE_OF_CARDINALS
-        };
+        
+        let possible_adjacencies = self.output_type.output_adjacencies();
 
         // First phase: generate icons
-        let assembled_map = self.generate_icons(&corners, &prefabs, num_frames, possible_states);
+        let assembled_map = self.generate_icons(&corners, &prefabs, num_frames, &possible_adjacencies);
 
         // Second phase: map to byond icon states and produce dirs if need
         // Even though this is the same loop as what happens in generate_icons,
@@ -159,10 +155,8 @@ impl IconOperationConfig for BitmaskSlice {
             .as_ref()
             .and_then(|animation| animation.rewind)
             .unwrap_or(false);
-
-        let states_to_gen = (0..possible_states)
-            .map(|x| Adjacency::from_bits(x as u8).unwrap())
-            .filter(Adjacency::ref_has_no_orphaned_corner);
+        
+        let states_to_gen = possible_adjacencies.into_iter().filter(Adjacency::ref_has_no_orphaned_corner);
         for adjacency in states_to_gen {
             let mut animated_blocks = vec![vec![]; num_frames as usize];
             for direction in &output_directions {
@@ -184,7 +178,7 @@ impl IconOperationConfig for BitmaskSlice {
                 .flatten()
                 .collect::<Vec<DynamicImage>>();
 
-            let signature = adjacency.bits();
+            let signature = adjacency.pretty_print();
 
             let name = if let Some(prefix_name) = &self.output_name {
                 format!("{prefix_name}-{signature}")
@@ -241,10 +235,6 @@ impl IconOperationConfig for BitmaskSlice {
 type CornerPayload = Map<Direction, Map<CornerType, Map<Corner, Vec<DynamicImage>>>>;
 type PrefabPayload = Map<Direction, HashMap<Adjacency, Vec<DynamicImage>>>;
 
-// possible icon set is the powerset of the possible directions
-// the size of a powerset is always 2^n where n is number of discrete elements
-pub const SIZE_OF_CARDINALS: usize = usize::pow(2, 4);
-pub const SIZE_OF_DIAGONALS: usize = usize::pow(2, 8);
 
 impl BitmaskSlice {
     #[tracing::instrument(skip(img))]
@@ -305,11 +295,7 @@ impl BitmaskSlice {
 
         let num_frames = height / self.icon_size.y;
 
-        let corner_types = if self.smooth_diagonally {
-            CornerType::diagonal()
-        } else {
-            CornerType::cardinal()
-        };
+        let corner_types = self.output_type.corners_used();
 
         let direction_positions = self.direction_strategy.input_positions();
 
@@ -346,17 +332,19 @@ impl BitmaskSlice {
             let dir_index = *direction_positions.get(direction).unwrap();
             let mut prefabs = HashMap::new();
             if let Some(prefabs_config) = &self.prefabs {
-                for (adjacency_bits, position) in &prefabs_config.0 {
+                for (adjacency, position) in &prefabs_config.0 {
                     let mut frame_vector = vec![];
                     for frame in 0..num_frames {
-                        let x = (dir_index * position + (prefab_count * (dir_index - 1)))
-                            * self.icon_size.x;
+                        debug!("prefab inputs: idx {} position {} position count {} prefab count {} frame {}", dir_index, position, prefab_count, position_count, frame);
+                        let input_index = dir_index * (position_count + prefab_count) + position;
+                        let x = input_index * self.icon_size.x;
                         let y = frame * self.icon_size.y;
+                        debug!("prefab at {} {}", x, y);
                         let img = img.crop_imm(x, y, self.icon_size.x, self.icon_size.y);
 
                         frame_vector.push(img);
                     }
-                    prefabs.insert(Adjacency::from_bits(*adjacency_bits).unwrap(), frame_vector);
+                    prefabs.insert(*adjacency, frame_vector);
                 }
             }
             prefab_directions.insert(direction, prefabs);
@@ -374,7 +362,7 @@ impl BitmaskSlice {
         corners: &CornerPayload,
         prefabs: &PrefabPayload,
         num_frames: u32,
-        possible_states: usize,
+        possible_adjacencies: &Vec<Adjacency>,
     ) -> Map<Direction, BTreeMap<Adjacency, Vec<DynamicImage>>> {
         let mut assembled_map = Map::new();
 
@@ -382,11 +370,11 @@ impl BitmaskSlice {
             let corner_map = corners.get(direction).unwrap();
             let prefab_map = prefabs.get(direction).unwrap();
             let mut assembled: BTreeMap<Adjacency, Vec<DynamicImage>> = BTreeMap::new();
-            for signature in 0..possible_states {
-                let adjacency = Adjacency::from_bits(signature as u8).unwrap();
+            for adjacency in possible_adjacencies {
                 let mut icon_state_images = vec![];
                 for frame in 0..num_frames {
                     if prefab_map.contains_key(&adjacency) {
+                        debug!("prefab found! {}", adjacency.pretty_print());
                         let mut frame_image = DynamicImage::new_rgba8(
                             self.output_icon_size.x,
                             self.output_icon_size.y,
@@ -433,7 +421,7 @@ impl BitmaskSlice {
                         icon_state_images.push(frame_image);
                     }
                 }
-                assembled.insert(adjacency, icon_state_images);
+                assembled.insert(adjacency.clone(), icon_state_images);
             }
             assembled_map.insert(direction, assembled);
         }

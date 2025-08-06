@@ -226,7 +226,7 @@ mod test {
 
             let test_toml = "
                 operation = \"BitmaskSlice\"
-                smooth_diagonally = false
+                output_type = \"Cardinal\"
 
                 [icon_size]
                 x = 32

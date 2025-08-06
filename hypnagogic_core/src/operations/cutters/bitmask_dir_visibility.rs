@@ -10,8 +10,6 @@ use crate::generation::icon::generate_map_icon;
 use crate::operations::cutters::bitmask_slice::{
     BitmaskSlice,
     SideSpacing,
-    SIZE_OF_CARDINALS,
-    SIZE_OF_DIAGONALS,
 };
 use crate::operations::error::{ProcessorError, ProcessorResult};
 use crate::operations::{
@@ -51,11 +49,7 @@ impl IconOperationConfig for BitmaskDirectionalVis {
         let (_in_x, in_y) = img.dimensions();
         let num_frames = in_y / self.bitmask_slice_config.icon_size.y;
 
-        let possible_states = if self.bitmask_slice_config.smooth_diagonally {
-            SIZE_OF_DIAGONALS
-        } else {
-            SIZE_OF_CARDINALS
-        };
+        let possible_adjacencies = self.bitmask_slice_config.output_type.output_adjacencies();
 
         let output_directions = self.bitmask_slice_config.direction_strategy.output_vec();
         let dir_count = output_directions.len() as u8;
@@ -63,7 +57,7 @@ impl IconOperationConfig for BitmaskDirectionalVis {
             &corners,
             &prefabs,
             num_frames,
-            possible_states,
+            &possible_adjacencies,
         );
 
         let delay: Option<Vec<f32>> = self
@@ -80,9 +74,7 @@ impl IconOperationConfig for BitmaskDirectionalVis {
 
         let mut icon_states = vec![];
 
-        let states_to_gen = (0..possible_states)
-            .map(|x| Adjacency::from_bits(x as u8).unwrap())
-            .filter(Adjacency::ref_has_no_orphaned_corner);
+        let states_to_gen = possible_adjacencies.into_iter().filter(Adjacency::ref_has_no_orphaned_corner);
 
         for adjacency in states_to_gen {
             for side in Side::dmi_cardinals() {
@@ -137,7 +129,7 @@ impl IconOperationConfig for BitmaskDirectionalVis {
                     }
                 }
                 icon_states.push(dedupe_frames(IconState {
-                    name: format!("{}-{}", adjacency.bits(), side.byond_dir()),
+                    name: format!("{}-{}", adjacency.pretty_print(), side.byond_dir()),
 
                     dirs: dir_count,
                     frames: num_frames,

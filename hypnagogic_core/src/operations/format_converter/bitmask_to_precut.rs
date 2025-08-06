@@ -13,6 +13,7 @@ use crate::operations::format_converter::error::{
     RestrorationError,
 };
 use crate::operations::{IconOperationConfig, InputIcon, OperationMode, ProcessorPayload};
+use crate::util::adjacency::Adjacency;
 use crate::util::delays::text_delays;
 use crate::util::directions::DirectionStrategy;
 
@@ -67,11 +68,11 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
                 let full_name = state.name.clone();
                 let mut split_name = full_name.split('-');
                 let prefix = split_name.next().unwrap_or_default();
-                let suffix = split_name.next();
+                let suffix = split_name.map(|elem| elem.to_string()).reduce(|acc, elm| format!("{}-{}", acc, elm));
                 if suffix.is_some() && prefix != output_prefix.unwrap_or_default() {
                     problem_entries.push(full_name.clone());
                 }
-                (state, suffix.unwrap_or(prefix).to_string())
+                (state, suffix.unwrap_or(prefix.to_string()))
             })
             .collect::<Vec<(IconState, String)>>();
 
@@ -112,7 +113,7 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
         let ignored_states = frames_drop_prefix
             .into_iter()
             .filter_map(|(_, suffix)| {
-                if suffix.parse::<i32>().is_ok()
+                if suffix.parse::<Adjacency>().is_ok()
                     || strings_caught.iter().any(|caught| *caught == suffix)
                 {
                     None

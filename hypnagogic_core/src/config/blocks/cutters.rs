@@ -3,7 +3,8 @@ use std::collections::{BTreeMap, HashMap};
 use fixed_map::Map;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::util::corners::{CornerType, Side};
+use crate::util::{adjacency::Adjacency, corners::{CornerType, Side}};
+use tracing::{debug, trace};
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct IconSize {
@@ -156,7 +157,7 @@ impl<'de> Deserialize<'de> for StringMap {
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
-pub struct Prefabs(pub BTreeMap<u8, u32>);
+pub struct Prefabs(pub BTreeMap<Adjacency, u32>);
 
 impl Prefabs {
     #[must_use]
@@ -179,7 +180,7 @@ impl Serialize for Prefabs {
         let mut map = BTreeMap::new();
 
         for (k, v) in &self.0 {
-            map.insert(k.to_string(), *v);
+            map.insert(k.pretty_print(), *v);
         }
 
         PrefabsHelper { map }.serialize(serializer)
@@ -194,7 +195,7 @@ impl<'de> Deserialize<'de> for Prefabs {
         Deserialize::deserialize(deserializer).map(|PrefabsHelper { map }| {
             let mut result = BTreeMap::new();
             for (k, v) in map {
-                result.insert(k.parse().unwrap(), v);
+                result.insert(Adjacency::from(k), v);
             }
             Prefabs(result)
         })
