@@ -59,13 +59,16 @@ pub struct InvalidAdjacencyError;
 
 impl FromStr for Adjacency {
     type Err = InvalidAdjacencyError;
+
     fn from_str(text: &str) -> Result<Self, Self::Err> {
         let mut parsing_text = text.to_string();
         if let Some(d_location) = parsing_text.find("d") {
             parsing_text.remove(d_location);
             parsing_text.remove(d_location - 1); // get the -
         };
-        let parsed_bytes = parsing_text.parse::<u16>().map_err(|_| InvalidAdjacencyError)?;
+        let parsed_bytes = parsing_text
+            .parse::<u16>()
+            .map_err(|_| InvalidAdjacencyError)?;
         if let Some(adjacency) = Adjacency::from_bits(parsed_bytes) {
             Ok(adjacency)
         } else {
@@ -88,15 +91,23 @@ impl Adjacency {
 
     #[must_use]
     pub fn diagonal_cardinals() -> Vec<Adjacency> {
-        vec![Adjacency::N | Adjacency::E, Adjacency::S | Adjacency::E, Adjacency::S | Adjacency::W, Adjacency::N | Adjacency::W]
+        vec![
+            Adjacency::N | Adjacency::E,
+            Adjacency::S | Adjacency::E,
+            Adjacency::S | Adjacency::W,
+            Adjacency::N | Adjacency::W,
+        ]
     }
 
     #[must_use]
     pub fn filled_diagonals() -> Vec<Adjacency> {
-        Adjacency::diagonals().into_iter().map(|adjacency| {
-            let (vertical, horizontal) = adjacency.corner_sides();
-            adjacency | vertical | horizontal
-        }).collect::<Vec<Adjacency>>()
+        Adjacency::diagonals()
+            .into_iter()
+            .map(|adjacency| {
+                let (vertical, horizontal) = adjacency.corner_sides();
+                adjacency | vertical | horizontal
+            })
+            .collect::<Vec<Adjacency>>()
     }
 
     /// Gets the sides for a given corner adjacency
@@ -170,21 +181,23 @@ impl Adjacency {
         ];
         full.into_iter().filter(|a| self.contains(*a)).collect()
     }
+
     #[must_use]
     pub fn get_corner_type(self, corner: Corner) -> CornerType {
         let adj_corner: Adjacency = Adjacency::from_corner(corner);
         let (vertical, horizontal) = adj_corner.corner_sides();
-        // If we're an edge then it becomes stupid. Perhaps I should have done this as prefabs after all
+        // If we're an edge then it becomes stupid. Perhaps I should have done this as
+        // prefabs after all
         if self.intersects(Adjacency::EDGES) {
             bitflags_match!(self.difference(Adjacency::EDGES), {
-                Adjacency::S | Adjacency::E => CornerType::BottomRightInner, 
-                Adjacency::S | Adjacency::W => CornerType::BottomLeftInner, 
-                Adjacency::N | Adjacency::E => CornerType::TopRightInner, 
+                Adjacency::S | Adjacency::E => CornerType::BottomRightInner,
+                Adjacency::S | Adjacency::W => CornerType::BottomLeftInner,
+                Adjacency::N | Adjacency::E => CornerType::TopRightInner,
                 Adjacency::N | Adjacency::W => CornerType::TopLeftInner,
-                Adjacency::S | Adjacency::E | Adjacency::SE => CornerType::BottomRightOuter, 
-                Adjacency::S | Adjacency::W | Adjacency::SW => CornerType::BottomLeftOuter, 
-                Adjacency::N | Adjacency::E | Adjacency::NE => CornerType::TopRightOuter, 
-                Adjacency::N | Adjacency::W | Adjacency::NW => CornerType::TopLeftOuter, 
+                Adjacency::S | Adjacency::E | Adjacency::SE => CornerType::BottomRightOuter,
+                Adjacency::S | Adjacency::W | Adjacency::SW => CornerType::BottomLeftOuter,
+                Adjacency::N | Adjacency::E | Adjacency::NE => CornerType::TopRightOuter,
+                Adjacency::N | Adjacency::W | Adjacency::NW => CornerType::TopLeftOuter,
                 _ => CornerType::Convex
             })
         // It should only flat smooth if cardinals are filled too

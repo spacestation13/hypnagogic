@@ -7,10 +7,7 @@ use tracing::trace;
 
 use crate::config::blocks::cutters::SlicePoint;
 use crate::generation::icon::generate_map_icon;
-use crate::operations::cutters::bitmask_slice::{
-    BitmaskSlice,
-    SideSpacing,
-};
+use crate::operations::cutters::bitmask_slice::{BitmaskSlice, SideSpacing};
 use crate::operations::error::{ProcessorError, ProcessorResult};
 use crate::operations::{
     IconOperationConfig,
@@ -74,7 +71,9 @@ impl IconOperationConfig for BitmaskDirectionalVis {
 
         let mut icon_states = vec![];
 
-        let states_to_gen = possible_adjacencies.into_iter().filter(Adjacency::ref_has_no_orphaned_corner);
+        let states_to_gen = possible_adjacencies
+            .into_iter()
+            .filter(Adjacency::ref_has_no_orphaned_corner);
 
         for adjacency in states_to_gen {
             for side in Side::dmi_cardinals() {

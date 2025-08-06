@@ -2,9 +2,10 @@ use std::collections::{BTreeMap, HashMap};
 
 use fixed_map::Map;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-
-use crate::util::{adjacency::Adjacency, corners::{CornerType, Side}};
 use tracing::{debug, trace};
+
+use crate::util::adjacency::Adjacency;
+use crate::util::corners::{CornerType, Side};
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct IconSize {

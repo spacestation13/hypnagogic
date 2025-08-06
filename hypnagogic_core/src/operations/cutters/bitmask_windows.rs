@@ -13,7 +13,7 @@ use crate::config::blocks::cutters::{
     OutputIconSize,
     Positions,
 };
-use crate::operations::cutters::bitmask_slice::{BitmaskSlice};
+use crate::operations::cutters::bitmask_slice::BitmaskSlice;
 use crate::operations::error::{ProcessorError, ProcessorResult};
 use crate::operations::{IconOperationConfig, InputIcon, OperationMode, ProcessorPayload};
 use crate::util::adjacency::Adjacency;
@@ -69,9 +69,9 @@ impl IconOperationConfig for BitmaskWindows {
             output_type: CornerSet::StandardDiagonal,
             map_icon: None,
         };
-        
+
         let (corners, prefabs) = bitmask_config.generate_corners(img)?;
-        
+
         let corner_adjacencies = CornerSet::StandardDiagonal.output_adjacencies();
 
         let assembled_map =
@@ -108,7 +108,9 @@ impl IconOperationConfig for BitmaskWindows {
 
         let mut states = vec![];
 
-        let states_to_gen = corner_adjacencies.into_iter().filter(Adjacency::ref_has_no_orphaned_corner);
+        let states_to_gen = corner_adjacencies
+            .into_iter()
+            .filter(Adjacency::ref_has_no_orphaned_corner);
         for adjacency in states_to_gen {
             let mut states_from_assembled = |prefix: &str,
                                              assembled_set: &BTreeMap<

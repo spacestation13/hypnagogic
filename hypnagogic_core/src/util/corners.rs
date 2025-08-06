@@ -171,13 +171,14 @@ impl Display for CornerType {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum CornerSet {
     #[default]
-    // Produces cardinal smoothing, so smoothing with your 4 neighbors 
+    // Produces cardinal smoothing, so smoothing with your 4 neighbors
     Cardinal,
-    // Produces standard diagonal smoothing, so smoothing with your 8 neighbors. 
+    // Produces standard diagonal smoothing, so smoothing with your 8 neighbors.
     // This requires an extra "flat" input which represents smoothing with all 8 at once
     StandardDiagonal,
     // Produces vornered diagonal smoothing, which is like diagonal smoothing but it takes 8
-    // Additional inputs to use as corners for L sides, one for when there's a turf on the inside and one for when there is not
+    // Additional inputs to use as corners for L sides, one for when there's a turf on the inside
+    // and one for when there is not
     CornerDiagonal,
 }
 
@@ -194,9 +195,11 @@ impl Display for CornerSet {
 impl CornerSet {
     pub fn possible_bit_states(&self) -> u16 {
         match self {
-            Self::Cardinal => usize::pow(2, 4) as u16, // we need 16 bits for this guy, since we have 4 dirs to care about
-            Self::StandardDiagonal => usize::pow(2, 8) as u16, // 255 for you, since we have the 8 
-            Self::CornerDiagonal => usize::pow(2, 8) as u16, // and 255 for you, since the diagonals are done as a suffix 
+            Self::Cardinal => usize::pow(2, 4) as u16, /* we need 16 bits for this guy, since we
+                                                         * have 4 dirs to care about */
+            Self::StandardDiagonal => usize::pow(2, 8) as u16, // 255 for you, since we have the 8
+            Self::CornerDiagonal => usize::pow(2, 8) as u16, /* and 255 for you, since the
+                                                              * diagonals are done as a suffix */
         }
     }
 
@@ -215,10 +218,13 @@ impl CornerSet {
                         } else {
                             vec![adjacency]
                         }
-                    }).collect::<Vec<Adjacency>>()
+                    })
+                    .collect::<Vec<Adjacency>>()
             }
             _ => {
-                (0..self.possible_bit_states()).map(|bits| Adjacency::from_bits(bits).unwrap()).collect::<Vec<Adjacency>>()
+                (0..self.possible_bit_states())
+                    .map(|bits| Adjacency::from_bits(bits).unwrap())
+                    .collect::<Vec<Adjacency>>()
             }
         }
     }
@@ -226,34 +232,40 @@ impl CornerSet {
     #[must_use]
     pub fn corners_used(&self) -> Vec<CornerType> {
         match self {
-            Self::Cardinal => vec![
-                CornerType::Convex,
-                CornerType::Concave,
-                CornerType::Horizontal,
-                CornerType::Vertical,
-            ],
-            Self::StandardDiagonal => vec![
-                CornerType::Convex,
-                CornerType::Concave,
-                CornerType::Horizontal,
-                CornerType::Vertical,
-                CornerType::Flat,
-            ],
-            Self::CornerDiagonal => vec![
-                CornerType::Convex,
-                CornerType::Concave,
-                CornerType::Horizontal,
-                CornerType::Vertical,
-                CornerType::Flat,
-                CornerType::BottomRightInner,
-                CornerType::BottomLeftInner,
-                CornerType::TopRightInner,
-                CornerType::TopLeftInner,
-                CornerType::BottomRightOuter,
-                CornerType::BottomLeftOuter,
-                CornerType::TopRightOuter,
-                CornerType::TopLeftOuter,
-            ],
+            Self::Cardinal => {
+                vec![
+                    CornerType::Convex,
+                    CornerType::Concave,
+                    CornerType::Horizontal,
+                    CornerType::Vertical,
+                ]
+            }
+            Self::StandardDiagonal => {
+                vec![
+                    CornerType::Convex,
+                    CornerType::Concave,
+                    CornerType::Horizontal,
+                    CornerType::Vertical,
+                    CornerType::Flat,
+                ]
+            }
+            Self::CornerDiagonal => {
+                vec![
+                    CornerType::Convex,
+                    CornerType::Concave,
+                    CornerType::Horizontal,
+                    CornerType::Vertical,
+                    CornerType::Flat,
+                    CornerType::BottomRightInner,
+                    CornerType::BottomLeftInner,
+                    CornerType::TopRightInner,
+                    CornerType::TopLeftInner,
+                    CornerType::BottomRightOuter,
+                    CornerType::BottomLeftOuter,
+                    CornerType::TopRightOuter,
+                    CornerType::TopLeftOuter,
+                ]
+            }
         }
     }
 }

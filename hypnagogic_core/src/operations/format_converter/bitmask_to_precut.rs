@@ -68,7 +68,9 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
                 let full_name = state.name.clone();
                 let mut split_name = full_name.split('-');
                 let prefix = split_name.next().unwrap_or_default();
-                let suffix = split_name.map(|elem| elem.to_string()).reduce(|acc, elm| format!("{}-{}", acc, elm));
+                let suffix = split_name
+                    .map(|elem| elem.to_string())
+                    .reduce(|acc, elm| format!("{}-{}", acc, elm));
                 if suffix.is_some() && prefix != output_prefix.unwrap_or_default() {
                     problem_entries.push(full_name.clone());
                 }

@@ -52,7 +52,7 @@ pub struct BitmaskSlice {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub output_name: Option<String>,
-    pub output_type : CornerSet,
+    pub output_type: CornerSet,
     #[serde(default)]
     pub direction_strategy: DirectionStrategy,
     pub icon_size: IconSize,
@@ -131,11 +131,12 @@ impl IconOperationConfig for BitmaskSlice {
         }
 
         let (corners, prefabs) = self.generate_corners(img)?;
-        
+
         let possible_adjacencies = self.output_type.output_adjacencies();
 
         // First phase: generate icons
-        let assembled_map = self.generate_icons(&corners, &prefabs, num_frames, &possible_adjacencies);
+        let assembled_map =
+            self.generate_icons(&corners, &prefabs, num_frames, &possible_adjacencies);
 
         // Second phase: map to byond icon states and produce dirs if need
         // Even though this is the same loop as what happens in generate_icons,
@@ -155,8 +156,10 @@ impl IconOperationConfig for BitmaskSlice {
             .as_ref()
             .and_then(|animation| animation.rewind)
             .unwrap_or(false);
-        
-        let states_to_gen = possible_adjacencies.into_iter().filter(Adjacency::ref_has_no_orphaned_corner);
+
+        let states_to_gen = possible_adjacencies
+            .into_iter()
+            .filter(Adjacency::ref_has_no_orphaned_corner);
         for adjacency in states_to_gen {
             let mut animated_blocks = vec![vec![]; num_frames as usize];
             for direction in &output_directions {
@@ -335,7 +338,11 @@ impl BitmaskSlice {
                 for (adjacency, position) in &prefabs_config.0 {
                     let mut frame_vector = vec![];
                     for frame in 0..num_frames {
-                        debug!("prefab inputs: idx {} position {} position count {} prefab count {} frame {}", dir_index, position, prefab_count, position_count, frame);
+                        debug!(
+                            "prefab inputs: idx {} position {} position count {} prefab count {} \
+                             frame {}",
+                            dir_index, position, prefab_count, position_count, frame
+                        );
                         let input_index = dir_index * (position_count + prefab_count) + position;
                         let x = input_index * self.icon_size.x;
                         let y = frame * self.icon_size.y;
