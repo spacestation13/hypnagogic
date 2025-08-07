@@ -45,12 +45,26 @@ impl From<Side> for Adjacency {
 
 impl From<String> for Adjacency {
     fn from(text: String) -> Self {
+        let initial_text = text.clone();
         let mut parsing_text = text;
-        if let Some(d_location) = parsing_text.find("d") {
-            parsing_text.remove(d_location);
-            parsing_text.remove(d_location - 1); // get the -
-        };
-        Adjacency::from_bits(parsing_text.parse::<u16>().unwrap()).unwrap()
+        let mut uses_edges = false;
+        if let Some(stripped_text) = parsing_text.strip_suffix("-diagonal") {
+            parsing_text = stripped_text.to_string();
+            uses_edges = true;
+        }
+        let stripped_bits = Adjacency::from_bits(parsing_text.parse::<u16>().unwrap()).unwrap();
+        if !uses_edges {
+            stripped_bits
+        } else if let Some(edge_bits) = stripped_bits.get_edge_suport() {
+            stripped_bits | edge_bits
+        } else {
+            // should really be a bubbled error but I don't know how to do that really
+            panic!(
+                "Found an input marked diagonal {initial_text} without any bits that support \
+                 edges {}, wtf",
+                stripped_bits.pretty_print()
+            );
+        }
     }
 }
 
@@ -61,16 +75,23 @@ impl FromStr for Adjacency {
     type Err = InvalidAdjacencyError;
 
     fn from_str(text: &str) -> Result<Self, Self::Err> {
-        let mut parsing_text = text.to_string();
-        if let Some(d_location) = parsing_text.find("d") {
-            parsing_text.remove(d_location);
-            parsing_text.remove(d_location - 1); // get the -
-        };
+        let mut parsing_text = text;
+        let mut uses_edges = false;
+        if let Some(stripped_text) = parsing_text.strip_suffix("-diagonal") {
+            parsing_text = stripped_text;
+            uses_edges = true;
+        }
         let parsed_bytes = parsing_text
             .parse::<u16>()
             .map_err(|_| InvalidAdjacencyError)?;
-        if let Some(adjacency) = Adjacency::from_bits(parsed_bytes) {
-            Ok(adjacency)
+        let Some(stripped_bits) = Adjacency::from_bits(parsed_bytes) else {
+            return Err(InvalidAdjacencyError);
+        };
+
+        if !uses_edges {
+            Ok(stripped_bits)
+        } else if let Some(edge_bits) = stripped_bits.get_edge_suport() {
+            Ok(stripped_bits | edge_bits)
         } else {
             Err(InvalidAdjacencyError)
         }
@@ -182,6 +203,23 @@ impl Adjacency {
         full.into_iter().filter(|a| self.contains(*a)).collect()
     }
 
+    // Returns the sort of edges this corner in theory supports, it's stupid I'm
+    // sorry
+    #[must_use]
+    pub fn get_edge_suport(self) -> Option<Adjacency> {
+        bitflags_match!(self.difference(Adjacency::EDGES), {
+            Adjacency::S | Adjacency::E => Some(Adjacency::INNER_EDGE),
+            Adjacency::S | Adjacency::W => Some(Adjacency::INNER_EDGE),
+            Adjacency::N | Adjacency::E => Some(Adjacency::INNER_EDGE),
+            Adjacency::N | Adjacency::W => Some(Adjacency::INNER_EDGE),
+            Adjacency::S | Adjacency::E | Adjacency::SE => Some(Adjacency::OUTER_EDGE),
+            Adjacency::S | Adjacency::W | Adjacency::SW => Some(Adjacency::OUTER_EDGE),
+            Adjacency::N | Adjacency::E | Adjacency::NE => Some(Adjacency::OUTER_EDGE),
+            Adjacency::N | Adjacency::W | Adjacency::NW => Some(Adjacency::OUTER_EDGE),
+            _ => None
+        })
+    }
+
     #[must_use]
     pub fn get_corner_type(self, corner: Corner) -> CornerType {
         let adj_corner: Adjacency = Adjacency::from_corner(corner);
@@ -224,7 +262,7 @@ impl Adjacency {
         let number_bits = self.bits() & !(Adjacency::EDGES.bits());
         let mut pretty_string = number_bits.to_string();
         if self.intersects(Adjacency::EDGES) {
-            pretty_string = format!("{}-d", pretty_string);
+            pretty_string = format!("{pretty_string}-diagonal");
         }
         pretty_string
     }

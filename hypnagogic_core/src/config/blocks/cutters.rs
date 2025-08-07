@@ -2,7 +2,6 @@ use std::collections::{BTreeMap, HashMap};
 
 use fixed_map::Map;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use tracing::{debug, trace};
 
 use crate::util::adjacency::Adjacency;
 use crate::util::corners::{CornerType, Side};

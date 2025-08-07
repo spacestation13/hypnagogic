@@ -193,16 +193,17 @@ impl Display for CornerSet {
 }
 
 impl CornerSet {
+    #[must_use]
     pub fn possible_bit_states(&self) -> u16 {
         match self {
-            Self::Cardinal => usize::pow(2, 4) as u16, /* we need 16 bits for this guy, since we
-                                                         * have 4 dirs to care about */
-            Self::StandardDiagonal => usize::pow(2, 8) as u16, // 255 for you, since we have the 8
-            Self::CornerDiagonal => usize::pow(2, 8) as u16, /* and 255 for you, since the
-                                                              * diagonals are done as a suffix */
+            // we need 16 bits for this guy, since we have 4 dirs to care about
+            Self::Cardinal => usize::pow(2, 4) as u16,
+            // 255 for you, since we have the 8 and the diagonals are a suffix
+            Self::StandardDiagonal | Self::CornerDiagonal => usize::pow(2, 8) as u16,
         }
     }
 
+    #[must_use]
     pub fn output_adjacencies(&self) -> Vec<Adjacency> {
         match self {
             Self::CornerDiagonal => {
@@ -212,9 +213,9 @@ impl CornerSet {
                     .flat_map(|bits| {
                         let adjacency = Adjacency::from_bits(bits).unwrap();
                         if inner_corners.contains(&adjacency) {
-                            vec![adjacency, adjacency.clone() | Adjacency::INNER_EDGE]
+                            vec![adjacency, adjacency | Adjacency::INNER_EDGE]
                         } else if outer_corners.contains(&adjacency) {
-                            vec![adjacency, adjacency.clone() | Adjacency::OUTER_EDGE]
+                            vec![adjacency, adjacency | Adjacency::OUTER_EDGE]
                         } else {
                             vec![adjacency]
                         }

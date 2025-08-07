@@ -186,7 +186,7 @@ impl IconOperationConfig for BitmaskSlice {
             let name = if let Some(prefix_name) = &self.output_name {
                 format!("{prefix_name}-{signature}")
             } else {
-                format!("{signature}")
+                signature.to_string()
             };
             icon_states.push(dedupe_frames(IconState {
                 name,
@@ -380,7 +380,7 @@ impl BitmaskSlice {
             for adjacency in possible_adjacencies {
                 let mut icon_state_images = vec![];
                 for frame in 0..num_frames {
-                    if prefab_map.contains_key(&adjacency) {
+                    if prefab_map.contains_key(adjacency) {
                         debug!("prefab found! {}", adjacency.pretty_print());
                         let mut frame_image = DynamicImage::new_rgba8(
                             self.output_icon_size.x,
@@ -389,7 +389,7 @@ impl BitmaskSlice {
                         imageops::replace(
                             &mut frame_image,
                             prefab_map
-                                .get(&adjacency)
+                                .get(adjacency)
                                 .unwrap()
                                 .get(frame as usize)
                                 .unwrap(),
@@ -428,7 +428,7 @@ impl BitmaskSlice {
                         icon_state_images.push(frame_image);
                     }
                 }
-                assembled.insert(adjacency.clone(), icon_state_images);
+                assembled.insert(*adjacency, icon_state_images);
             }
             assembled_map.insert(direction, assembled);
         }
