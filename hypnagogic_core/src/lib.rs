@@ -20,6 +20,8 @@
 #![allow(clippy::bind_instead_of_map)]
 // throws in cases where `` obfuscates what's going on (code links)
 #![allow(clippy::doc_markdown)]
+// Leads to more messy code, harder to read IMO
+#![allow(clippy::redundant_closure_for_method_calls)]
 
 pub mod config;
 pub mod generation;

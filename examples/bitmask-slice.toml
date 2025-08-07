@@ -39,8 +39,14 @@ mode = "BitmaskSlice"
 #   ... direction being that base junction, rotated in whatever way. Exists mostly so client.dir supporting states
 #   ... can be created. Creates a lot of duplicate blocks otherwise.
 directional_strategy = "Standard"
-# Whether diagonal adjacency should be checked, primarily used with flat top icons
-smooth_diagonally = false
+
+# What sort of output/adjacency to make and use
+# Cardinal (Default) -> 4 inputs, icon will smooth as if it only cares about its cardinal neighbors
+# StandardDiagonal  -> 5 inputs, new addition is a flat "all connections" state, icon will smooth as if it cares 
+#   ... about all 8 neighbors
+# CorneredDiagonal -> 13 inputs, same as StandardDiagonal except we add 8 new inputs, 4 for "L edge pieces" on corners
+#   ... with a turf not on the shared diagonal, 4 for corners WITH a turf on the shared diagonal
+output_type = "Cardinal"
 
 # Size of the input icons. Represents what size each "block" will be before cutting
 [icon_size]
@@ -82,7 +88,7 @@ horizontal = 2
 vertical = 3
 # Represents the "flat" top section of diagonal smoothed falls
 # Something with *all* directions adjacent will solely consist of flat corners
-# REQUIRED IF USING smooth_diagonally
+# REQUIRED IF USING output_type = "StandardDiagonal"
 flat = 4
 
 # The "split point" of where to cut corners.

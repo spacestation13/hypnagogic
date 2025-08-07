@@ -13,11 +13,11 @@ use crate::config::blocks::cutters::{
     OutputIconSize,
     Positions,
 };
-use crate::operations::cutters::bitmask_slice::{BitmaskSlice, SIZE_OF_DIAGONALS};
+use crate::operations::cutters::bitmask_slice::BitmaskSlice;
 use crate::operations::error::{ProcessorError, ProcessorResult};
 use crate::operations::{IconOperationConfig, InputIcon, OperationMode, ProcessorPayload};
 use crate::util::adjacency::Adjacency;
-use crate::util::corners::CornerType;
+use crate::util::corners::{CornerSet, CornerType};
 use crate::util::directions::{Direction, DirectionStrategy};
 use crate::util::icon_ops::dedupe_frames;
 use crate::util::repeat_for;
@@ -66,13 +66,16 @@ impl IconOperationConfig for BitmaskWindows {
             direction_strategy: DirectionStrategy::Standard,
             prefabs: None,
             prefab_overlays: None,
-            smooth_diagonally: true,
+            output_type: CornerSet::StandardDiagonal,
             map_icon: None,
         };
 
         let (corners, prefabs) = bitmask_config.generate_corners(img)?;
+
+        let corner_adjacencies = CornerSet::StandardDiagonal.output_adjacencies();
+
         let assembled_map =
-            bitmask_config.generate_icons(&corners, &prefabs, num_frames, SIZE_OF_DIAGONALS);
+            bitmask_config.generate_icons(&corners, &prefabs, num_frames, &corner_adjacencies);
         // We know we will only care about normal directions here, so we can just bypass
         // anything else
         let assembled = assembled_map.get(Direction::STANDARD).unwrap();
@@ -90,7 +93,7 @@ impl IconOperationConfig for BitmaskWindows {
 
         let (corners_alt, prefabs_alt) = alt_config.generate_corners(img)?;
         let assembled_map_alt =
-            alt_config.generate_icons(&corners_alt, &prefabs_alt, num_frames, SIZE_OF_DIAGONALS);
+            alt_config.generate_icons(&corners_alt, &prefabs_alt, num_frames, &corner_adjacencies);
         let assembled_alt = assembled_map_alt.get(Direction::STANDARD).unwrap();
 
         let delay = self
@@ -105,8 +108,8 @@ impl IconOperationConfig for BitmaskWindows {
 
         let mut states = vec![];
 
-        let states_to_gen = (0..SIZE_OF_DIAGONALS)
-            .map(|x| Adjacency::from_bits(x as u8).unwrap())
+        let states_to_gen = corner_adjacencies
+            .into_iter()
             .filter(Adjacency::ref_has_no_orphaned_corner);
         for adjacency in states_to_gen {
             let mut states_from_assembled = |prefix: &str,
@@ -135,7 +138,7 @@ impl IconOperationConfig for BitmaskWindows {
                     lower_frames.push(lower_img);
                 }
 
-                let signature = adjacency.bits();
+                let signature = adjacency.pretty_print();
                 states.push(dedupe_frames(IconState {
                     name: format!("{prefix}{signature}-upper"),
                     dirs: 1,

@@ -7,7 +7,7 @@ mode = "BitmaskDirectionalVis"
 # These values are "inherited" from BitmaskSlice
 # Because the first "phase" is a normal bitmask slice, that step is configured by the same values
 # see the bitmask-slice example for what these do!
-smooth_diagonally = true
+output_type = "StandardDiagonal"
 
 [icon_size]
 x = 32

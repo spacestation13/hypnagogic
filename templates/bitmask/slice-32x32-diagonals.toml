@@ -2,7 +2,7 @@ template = "bitmask/slice-32x32"
 
 mode = "BitmaskSlice"
 
-smooth_diagonally = true
+output_type = "StandardDiagonal"
 
 [positions]
 convex = 0

@@ -1,7 +1,7 @@
 file_prefix = "GENERATED-"
 mode = "BitmaskSlice"
 
-smooth_diagonally = false
+output_type = "Cardinal"
 
 [icon_size]
 x = 32

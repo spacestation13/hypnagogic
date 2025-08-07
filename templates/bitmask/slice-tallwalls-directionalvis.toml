@@ -1,6 +1,6 @@
 mode = "BitmaskDirectionalVis"
 
-smooth_diagonally = true
+output_type = "StandardDiagonal"
 
 [icon_size]
 x = 32
