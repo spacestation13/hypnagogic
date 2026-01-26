@@ -92,7 +92,7 @@ impl IconOperationConfig for BitmaskSlice {
         let position_count = self.positions.count() as u32;
         let direction_count = self.direction_strategy.input_vec().len() as u32;
         let prefab_count = if let Some(prefab) = &self.prefabs {
-            prefab.0.values().count() as u32
+            prefab.count() as u32
         } else {
             0
         };
