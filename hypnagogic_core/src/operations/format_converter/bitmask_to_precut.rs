@@ -116,7 +116,7 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
             .into_iter()
             .filter_map(|(_, suffix)| {
                 if suffix.parse::<Adjacency>().is_ok()
-                    || strings_caught.iter().any(|caught| *caught == suffix)
+                    || strings_caught.contains(&suffix)
                 {
                     None
                 } else {
