@@ -186,7 +186,7 @@ impl IconOperationConfig for BitmaskSlice {
             let name = if let Some(prefix_name) = &self.output_name {
                 format!("{prefix_name}-{signature}")
             } else {
-                signature.to_string()
+                signature
             };
             icon_states.push(dedupe_frames(IconState {
                 name,
