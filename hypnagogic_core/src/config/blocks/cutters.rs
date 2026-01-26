@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use fixed_map::Map;
+use itertools::Itertools;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::util::adjacency::Adjacency;
@@ -162,7 +163,7 @@ pub struct Prefabs(pub BTreeMap<Adjacency, u32>);
 impl Prefabs {
     #[must_use]
     pub fn count(&self) -> usize {
-        self.0.keys().count()
+        self.0.values().unique().count()
     }
 }
 
