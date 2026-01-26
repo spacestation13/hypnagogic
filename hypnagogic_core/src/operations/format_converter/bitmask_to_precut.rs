@@ -115,9 +115,7 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
         let ignored_states = frames_drop_prefix
             .into_iter()
             .filter_map(|(_, suffix)| {
-                if suffix.parse::<Adjacency>().is_ok()
-                    || strings_caught.contains(&suffix)
-                {
+                if suffix.parse::<Adjacency>().is_ok() || strings_caught.contains(&suffix) {
                     None
                 } else {
                     Some(format!("({suffix})"))
