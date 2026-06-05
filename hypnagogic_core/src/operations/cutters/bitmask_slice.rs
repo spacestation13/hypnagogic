@@ -4,6 +4,7 @@ use dmi::icon::{Icon, IconState};
 use enum_iterator::all;
 use fixed_map::Map;
 use image::{imageops, DynamicImage, GenericImageView};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, trace};
 
@@ -68,6 +69,8 @@ pub struct BitmaskSlice {
     pub prefabs: Option<Prefabs>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
+    // Unused block, is this for inputting corners, or for overlaying stuff on sprites (suspect the
+    // latter)
     pub prefab_overlays: Option<PrefabOverlays>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
@@ -89,14 +92,9 @@ impl IconOperationConfig for BitmaskSlice {
         let num_frames = in_y / self.icon_size.y;
 
         // I want to shitcheck our image against how large we KNOW it has to be
-        let position_count = self.positions.count() as u32;
+        let input_count = self.get_input_count();
         let direction_count = self.direction_strategy.input_vec().len() as u32;
-        let prefab_count = if let Some(prefab) = &self.prefabs {
-            prefab.count() as u32
-        } else {
-            0
-        };
-        let expected_width = direction_count * (position_count + prefab_count) * self.icon_size.x;
+        let expected_width = direction_count * input_count * self.icon_size.x;
         let actual_width = in_x;
         if expected_width != actual_width {
             // If we're 1 slot off, then it's either prefabs or an extra position
@@ -114,8 +112,7 @@ impl IconOperationConfig for BitmaskSlice {
             // pretty obvious
             let direction_width = (expected_width / direction_count) as f32;
             if (actual_width as f32 / direction_width).fract().abs() < 0.001 {
-                let actual_direction =
-                    actual_width / ((position_count + prefab_count) * self.icon_size.x);
+                let actual_direction = actual_width / (input_count * self.icon_size.x);
                 return Err(ProcessorError::ImageWidthOffByDirection(
                     expected_width,
                     actual_width,
@@ -245,10 +242,9 @@ impl BitmaskSlice {
         &self,
         img: &DynamicImage,
         position: u32,
-        position_count: u32,
+        input_count: u32,
         dir_index: u32,
         num_frames: u32,
-        prefab_count: u32,
     ) -> Map<Corner, Vec<DynamicImage>> {
         let mut out = Map::new();
 
@@ -263,7 +259,7 @@ impl BitmaskSlice {
                 let y_spacing = self.get_side_info(y_side);
                 let x_offset = x_spacing.start;
                 let y_offset = y_spacing.start;
-                let index = dir_index * (position_count + prefab_count) + position;
+                let index = dir_index * input_count + position;
                 let x = index * self.icon_size.x + x_offset;
                 let y = (frame_num * self.icon_size.y) + y_offset;
 
@@ -302,12 +298,7 @@ impl BitmaskSlice {
 
         let direction_positions = self.direction_strategy.input_positions();
 
-        let prefab_count = if let Some(prefab) = &self.prefabs {
-            prefab.count() as u32
-        } else {
-            0
-        };
-        let position_count = self.positions.count() as u32;
+        let input_count = self.get_input_count();
 
         let mut corner_directions: CornerPayload = Map::new();
         for direction in self.direction_strategy.input_vec() {
@@ -316,14 +307,7 @@ impl BitmaskSlice {
             for corner_type in &corner_types[..] {
                 let position = self.positions.get(*corner_type).unwrap();
 
-                let corners = self.build_corner(
-                    img,
-                    position,
-                    position_count,
-                    dir_index,
-                    num_frames,
-                    prefab_count,
-                );
+                let corners = self.build_corner(img, position, input_count, dir_index, num_frames);
 
                 corner_map.insert(*corner_type, corners);
             }
@@ -339,11 +323,10 @@ impl BitmaskSlice {
                     let mut frame_vector = vec![];
                     for frame in 0..num_frames {
                         debug!(
-                            "prefab inputs: idx {} position {} position count {} prefab count {} \
-                             frame {}",
-                            dir_index, position, prefab_count, position_count, frame
+                            "prefab inputs: idx {} position {} input count {} frame {}",
+                            dir_index, position, input_count, frame
                         );
-                        let input_index = dir_index * (position_count + prefab_count) + position;
+                        let input_index = dir_index * input_count + position;
                         let x = input_index * self.icon_size.x;
                         let y = frame * self.icon_size.y;
                         debug!("prefab at {} {}", x, y);
@@ -448,12 +431,7 @@ impl BitmaskSlice {
             self.icon_size.y,
         );
 
-        let prefab_count = if let Some(prefab) = &self.prefabs {
-            prefab.count() as u32
-        } else {
-            0
-        };
-        let position_count = self.positions.count() as u32;
+        let input_count = self.get_input_count();
 
         let direction_positions = self.direction_strategy.input_positions();
         for direction in directions {
@@ -462,7 +440,7 @@ impl BitmaskSlice {
             for (corner_type, map) in corner_map.iter() {
                 let position = self.positions.get(corner_type).unwrap();
                 for (corner, vec) in map.iter() {
-                    let input_index = dir_index * (position_count + prefab_count) + position;
+                    let input_index = dir_index * input_count + position;
                     // output each corner as it's own file
                     out.push(NamedIcon::new(
                         "DEBUGOUT/CORNERS/",
@@ -522,5 +500,19 @@ impl BitmaskSlice {
                 }
             }
         }
+    }
+
+    #[must_use]
+    pub fn get_input_count(&self) -> u32 {
+        let mut all_inputs = vec![];
+        for input in self.positions.0.values() {
+            all_inputs.push(input);
+        }
+        if let Some(prefab) = &self.prefabs {
+            for input in prefab.0.values() {
+                all_inputs.push(input);
+            }
+        }
+        all_inputs.into_iter().unique().count() as u32
     }
 }
