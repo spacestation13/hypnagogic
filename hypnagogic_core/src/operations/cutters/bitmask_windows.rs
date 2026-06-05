@@ -128,14 +128,14 @@ impl IconOperationConfig for BitmaskWindows {
 
                     let upper_img =
                         uncut_img.crop_imm(0, 0, self.output_icon_size.x, self.output_icon_size.y);
-                    upper_frames.push(upper_img);
+                    upper_frames.push(upper_img.into_rgba8());
                     let lower_img = uncut_img.crop_imm(
                         0,
                         self.icon_size.y / 2,
                         self.output_icon_size.x,
                         self.output_icon_size.y,
                     );
-                    lower_frames.push(lower_img);
+                    lower_frames.push(lower_img.into_rgba8());
                 }
 
                 let signature = adjacency.pretty_print();

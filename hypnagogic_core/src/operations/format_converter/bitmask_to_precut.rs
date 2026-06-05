@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use dmi::icon::IconState;
-use image::{DynamicImage, GenericImage};
+use image::{DynamicImage, GenericImage, RgbaImage};
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
@@ -244,7 +244,7 @@ impl IconOperationConfig for BitmaskSliceReconstruct {
                 state
                     .images
                     .chunks(chunk_size)
-                    .collect::<Vec<&[DynamicImage]>>()
+                    .collect::<Vec<&[RgbaImage]>>()
             };
             for (y, frame_directions) in grouped_frames.into_iter().enumerate() {
                 // now we place!

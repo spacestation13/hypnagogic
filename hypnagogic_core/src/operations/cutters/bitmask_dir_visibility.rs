@@ -1,7 +1,7 @@
 use dmi::icon::{Icon, IconState};
 use enum_iterator::all;
 use fixed_map::Map;
-use image::{imageops, DynamicImage, GenericImageView};
+use image::{imageops, GenericImageView, RgbaImage};
 use serde::{Deserialize, Serialize};
 use tracing::trace;
 
@@ -116,7 +116,7 @@ impl IconOperationConfig for BitmaskDirectionalVis {
                         }
                     };
                     for image in images {
-                        let mut cut_img = DynamicImage::new_rgba8(
+                        let mut cut_img = RgbaImage::new(
                             self.bitmask_slice_config.icon_size.x,
                             self.bitmask_slice_config.icon_size.y,
                         );
@@ -181,7 +181,7 @@ impl IconOperationConfig for BitmaskDirectionalVis {
             for direction in &output_directions {
                 let images = *convex_images.get(*direction).unwrap();
                 for image in images {
-                    let mut cut_img = DynamicImage::new_rgba8(
+                    let mut cut_img = RgbaImage::new(
                         self.bitmask_slice_config.icon_size.x,
                         self.bitmask_slice_config.icon_size.y,
                     );
@@ -210,7 +210,8 @@ impl IconOperationConfig for BitmaskDirectionalVis {
                 self.bitmask_slice_config.output_icon_size.x,
                 self.bitmask_slice_config.output_icon_size.y,
                 map_icon,
-            )?;
+            )?
+            .into_rgba8();
             icon_states.push(IconState {
                 name: map_icon.icon_state_name.clone(),
                 dirs: 1,

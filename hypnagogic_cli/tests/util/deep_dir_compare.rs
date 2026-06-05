@@ -2,9 +2,8 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use dmi::icon::Icon;
-use image::DynamicImage;
+use image::RgbaImage;
 use thiserror::Error;
-use tracing::error;
 use walkdir::WalkDir;
 
 #[derive(Debug, Error)]
@@ -16,7 +15,7 @@ pub enum DmiCompareError {
     #[error("Different icon state order: {0:?} vs {1:?}")]
     DifferentIconStateOrder(Vec<String>, Vec<String>),
     #[error("Different icon state pixel data")]
-    DifferentIconStatePixelData(HashMap<String, Vec<(DynamicImage, DynamicImage)>>),
+    DifferentIconStatePixelData(HashMap<String, Vec<(RgbaImage, RgbaImage)>>),
 }
 
 pub fn compare_dmi(dmi1: &Icon, dmi2: &Icon) -> Result<(), DmiCompareError> {
