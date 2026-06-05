@@ -69,7 +69,8 @@ pub struct BitmaskSlice {
     pub prefabs: Option<Prefabs>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    // Unused block, is this for inputting corners, or for overlaying stuff on sprites (suspect the latter)
+    // Unused block, is this for inputting corners, or for overlaying stuff on sprites (suspect the
+    // latter)
     pub prefab_overlays: Option<PrefabOverlays>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
@@ -111,8 +112,7 @@ impl IconOperationConfig for BitmaskSlice {
             // pretty obvious
             let direction_width = (expected_width / direction_count) as f32;
             if (actual_width as f32 / direction_width).fract().abs() < 0.001 {
-                let actual_direction =
-                    actual_width / (input_count * self.icon_size.x);
+                let actual_direction = actual_width / (input_count * self.icon_size.x);
                 return Err(ProcessorError::ImageWidthOffByDirection(
                     expected_width,
                     actual_width,
@@ -307,13 +307,7 @@ impl BitmaskSlice {
             for corner_type in &corner_types[..] {
                 let position = self.positions.get(*corner_type).unwrap();
 
-                let corners = self.build_corner(
-                    img,
-                    position,
-                    input_count,
-                    dir_index,
-                    num_frames,
-                );
+                let corners = self.build_corner(img, position, input_count, dir_index, num_frames);
 
                 corner_map.insert(*corner_type, corners);
             }
@@ -329,8 +323,7 @@ impl BitmaskSlice {
                     let mut frame_vector = vec![];
                     for frame in 0..num_frames {
                         debug!(
-                            "prefab inputs: idx {} position {} input count {} \
-                             frame {}",
+                            "prefab inputs: idx {} position {} input count {} frame {}",
                             dir_index, position, input_count, frame
                         );
                         let input_index = dir_index * input_count + position;
@@ -516,10 +509,10 @@ impl BitmaskSlice {
             all_inputs.push(input);
         }
         if let Some(prefab) = &self.prefabs {
-            for input in  prefab.0.values() {
+            for input in prefab.0.values() {
                 all_inputs.push(input);
             }
-        };
+        }
         all_inputs.into_iter().unique().count() as u32
     }
 }
