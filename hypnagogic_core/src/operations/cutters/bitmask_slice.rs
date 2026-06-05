@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, HashMap};
 use dmi::icon::{Icon, IconState};
 use enum_iterator::all;
 use fixed_map::Map;
-use image::{imageops, DynamicImage, GenericImageView};
+use image::{imageops, DynamicImage, GenericImageView, RgbaImage};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, trace};
@@ -171,12 +171,12 @@ impl IconOperationConfig for BitmaskSlice {
                 next_frame
                     .into_iter()
                     .enumerate()
-                    .for_each(|(index, image)| animated_blocks[index].push(image));
+                    .for_each(|(index, image)| animated_blocks[index].push(image.into_rgba8()));
             }
             let icon_state_frames = animated_blocks
                 .into_iter()
                 .flatten()
-                .collect::<Vec<DynamicImage>>();
+                .collect::<Vec<RgbaImage>>();
 
             let signature = adjacency.pretty_print();
 
@@ -198,7 +198,8 @@ impl IconOperationConfig for BitmaskSlice {
 
         if let Some(map_icon) = &self.map_icon {
             let icon =
-                generate_map_icon(self.output_icon_size.x, self.output_icon_size.y, map_icon)?;
+                generate_map_icon(self.output_icon_size.x, self.output_icon_size.y, map_icon)?
+                    .into_rgba8();
             icon_states.push(IconState {
                 name: map_icon.icon_state_name.clone(),
                 dirs: 1,

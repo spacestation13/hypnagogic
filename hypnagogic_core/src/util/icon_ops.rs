@@ -1,5 +1,5 @@
 use dmi::icon::IconState;
-use image::{DynamicImage, GenericImageView};
+use image::{DynamicImage, GenericImageView, RgbaImage};
 
 use crate::util::color::Color;
 
@@ -8,7 +8,7 @@ use crate::util::color::Color;
 pub fn dedupe_frames(icon_state: IconState) -> IconState {
     struct AccumulatedAnim {
         delays: Vec<f32>,
-        frames: Vec<Vec<DynamicImage>>,
+        frames: Vec<Vec<RgbaImage>>,
         current_frame: usize,
     }
 
@@ -24,7 +24,7 @@ pub fn dedupe_frames(icon_state: IconState) -> IconState {
     let delay_bucket = icon_state
         .images
         .chunks_exact(icon_state.dirs as usize)
-        .map(<[image::DynamicImage]>::to_vec);
+        .map(<[image::RgbaImage]>::to_vec);
     // As we walk through the frames (chunks of pixels) in this icon state, we're
     // going to keep track of the ones that are duplicates, and "dedupe" them by
     // simply adding extra frame delay and removing the extra frame
@@ -52,7 +52,7 @@ pub fn dedupe_frames(icon_state: IconState) -> IconState {
         .frames
         .into_iter()
         .flatten()
-        .collect::<Vec<DynamicImage>>();
+        .collect::<Vec<RgbaImage>>();
 
     IconState {
         frames: deduped_anim.current_frame as u32,
